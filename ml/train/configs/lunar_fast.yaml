@@ -1,0 +1,19 @@
+# Training config for the fast/default SR model, lunar sensor profile
+model:
+  architecture: rrdb_gan     # Real-ESRGAN-style backbone
+  scale_factor: 4
+  in_channels: 1              # panchromatic
+data:
+  train_dir: ../data/processed/tiles/lunar/train
+  val_dir: ../data/processed/tiles/lunar/val
+  lr_tile_size: 128
+  hr_tile_size: 512
+training:
+  batch_size: 16
+  epochs: 100
+  learning_rate: 2e-4
+  loss: l1_plus_adversarial
+  precision: bf16
+uncertainty:
+  enabled: true
+  strategy: self_supervised_variance_head

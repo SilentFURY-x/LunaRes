@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+build/
+.vite/
+
+# Env / secrets
+.env
+.env.local
+*.pem
+
+# Data (never commit raw imagery or model weights)
+ml/data/raw/
+ml/data/processed/
+ml/data/cache/
+*.tif
+*.tiff
+*.img
+*.lbl
+*.xml.bak
+*.ckpt
+*.pt
+*.pth
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Docker
+*.log
