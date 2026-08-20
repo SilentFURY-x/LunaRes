@@ -37,3 +37,5 @@ ml/data/cache/
 
 # Docker
 *.log
+
+ref/

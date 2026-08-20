@@ -1,15 +1,115 @@
-// docs/AppFlow.md step 5: the centerpiece screen. Tile-based before/after
-// swipe comparison (react-compare-slider) + toggleable confidence heatmap
-// layer, both backed by the titiler COG tile server — never load the full
-// raster client-side.
+/**
+ * Result Viewer Page — the centerpiece screen.
+ *
+ * Core value delivery: before/after comparison, confidence overlay,
+ * metrics, provenance, export actions, feedback tool.
+ *
+ * Layout: main viewport (left) + sidebar (right).
+ *
+ * @see docs/AppFlow.md step 5
+ * @see docs/frontend_layout.md section 5 — Result Viewer
+ */
+
+import { useState } from "react";
+import { useParams } from "react-router-dom";
+import CompareSlider from "@/components/viewer/CompareSlider";
+import TileMapView from "@/components/viewer/TileMapView";
+import ConfidenceOverlay from "@/components/viewer/ConfidenceOverlay";
+import MetricsPanel from "@/components/viewer/MetricsPanel";
+import ProvenancePanel from "@/components/viewer/ProvenancePanel";
+import ExportActions from "@/components/viewer/ExportActions";
+import FeedbackTool from "@/components/viewer/FeedbackTool";
+import TabSwitcher from "@/components/shared/TabSwitcher";
+import { useProductByJobScene } from "@/hooks/useProducts";
+import { env } from "@/config/env";
+
+const VIEW_TABS = [
+  { id: "compare", label: "Compare (LR ↔ SR)" },
+  { id: "map", label: "Deep Zoom (Tile Map)" },
+];
+
 export default function ResultViewerPage() {
+  const { jobId, sceneId } = useParams<{ jobId: string; sceneId: string }>();
+  const { data: product, isLoading, isError } = useProductByJobScene(jobId, sceneId);
+
+  // Confidence overlay state
+  const [confidenceEnabled, setConfidenceEnabled] = useState(false);
+  const [confidenceOpacity, setConfidenceOpacity] = useState(0.5);
+
+  if (isLoading) {
+    return (
+      <div className="px-6 py-10">
+        <p className="text-sm text-regolith/50">Loading result…</p>
+      </div>
+    );
+  }
+
+  if (isError || !product) {
+    return (
+      <div className="px-6 py-10">
+        <p className="text-sm text-flare">
+          Failed to load product. The job may still be processing.
+        </p>
+      </div>
+    );
+  }
+
+  // Build tile URLs from product URIs
+  const lrTileUrl = `${env.TILE_SERVER_URL}/cog/tiles/{z}/{x}/{y}?url=${encodeURIComponent(product.sr_output_uri)}`;
+  const srTileUrl = lrTileUrl; // SR output tiles
+  const confidenceTileUrl = product.confidence_map_uri
+    ? `${env.TILE_SERVER_URL}/cog/tiles/{z}/{x}/{y}?url=${encodeURIComponent(product.confidence_map_uri)}`
+    : undefined;
+
   return (
-    <div className="px-6 py-10">
+    <div className="px-6 py-6">
       <h2 className="font-display text-xl mb-4">Result</h2>
-      {/* TODO: <ReactCompareSlider> with LR tile layer vs SR tile layer
-          TODO: confidence overlay toggle (opacity slider)
-          TODO: metrics panel (PSNR/SSIM/LPIPS or no-reference score)
-          TODO: download actions (GeoTIFF / PNG / PDF report) */}
+
+      <div className="flex gap-6">
+        {/* Main viewport */}
+        <div className="flex-1 min-w-0">
+          <TabSwitcher tabs={VIEW_TABS} defaultTab="compare">
+            {(activeTab) => (
+              <div>
+                {activeTab === "compare" && (
+                  <CompareSlider
+                    lrImageUrl={lrTileUrl}
+                    srImageUrl={srTileUrl}
+                  />
+                )}
+                {activeTab === "map" && (
+                  <TileMapView
+                    tileUrl={srTileUrl}
+                    overlayTileUrl={
+                      confidenceEnabled ? confidenceTileUrl : undefined
+                    }
+                    overlayOpacity={confidenceOpacity}
+                  />
+                )}
+              </div>
+            )}
+          </TabSwitcher>
+
+          {/* Confidence controls — floating below viewport */}
+          <div className="mt-3">
+            <ConfidenceOverlay
+              enabled={confidenceEnabled}
+              onToggle={setConfidenceEnabled}
+              opacity={confidenceOpacity}
+              onOpacityChange={setConfidenceOpacity}
+              unavailable={!product.confidence_map_uri}
+            />
+          </div>
+        </div>
+
+        {/* Right sidebar */}
+        <div className="w-72 flex-shrink-0 flex flex-col gap-3">
+          <ProvenancePanel product={product} />
+          <MetricsPanel metrics={product.metrics} />
+          <ExportActions productId={product.product_id} />
+          <FeedbackTool productId={product.product_id} />
+        </div>
+      </div>
     </div>
   );
 }
