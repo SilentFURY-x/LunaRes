@@ -19,13 +19,17 @@ lunares/
 ├── frontend/           React + TypeScript web app (upload, map/AOI picker,
 │                        tiled before/after viewer, job dashboard)
 ├── backend/
-│   ├── api/             FastAPI app — routes, schemas, config
+│   ├── api/             FastAPI app — routes, schemas, config, dependencies
+│   │   └── routers/      scenes, jobs, products, pipeline, WebSocket
+│   ├── services/        Centralized storage service (S3/MinIO abstraction)
 │   ├── adapters/
 │   │   └── bhoonidhi/    ISRO pipeline adapter (mock + live implementations
 │   │                      behind one interface)
-│   ├── workers/          Celery tasks — tiling, inference, mosaic blending
-│   ├── models/            SR model + uncertainty head definitions
-│   └── db/                 SQLAlchemy models, PostGIS schema
+│   ├── workers/          Celery tasks — tiling, inference, mosaic blending,
+│   │                      quality metrics (PSNR/SSIM/NIQE)
+│   ├── models/            SR model wrapper (PyTorch + bicubic fallback)
+│   │                      + uncertainty/confidence estimation
+│   └── db/                 SQLAlchemy models, PostGIS schema, auto-init
 ├── ml/
 │   ├── data/               PDS→COG normalization, TMC-2/OHRC pairing scripts
 │   ├── train/                Training scripts and configs

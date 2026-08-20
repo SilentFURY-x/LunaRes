@@ -22,11 +22,14 @@ Guiding rule: every choice below is picked to be buildable by a small hackathon 
 | Layer | Choice | Why |
 |---|---|---|
 | API framework | **FastAPI** (Python) | Same language as the ML stack (no serialization friction between API and model code), auto-generated OpenAPI docs — useful for presenting the "ISRO pipeline contract" cleanly to judges |
-| Job queue | **Celery + Redis** (or RQ if the team wants something lighter) | Standard, well-understood async task pattern; directly demonstrates the scalability story |
-| Metadata database | **PostgreSQL + PostGIS** | PostGIS gives you spatial queries (AOI overlap search) for free — needed by both the catalog browse screen and the pipeline adapter's "search" semantics |
-| Object storage | **MinIO** (self-hosted, S3-compatible) for local/hackathon dev; swap to **AWS S3** for a hosted demo | Same API either way — zero code change to move from laptop to cloud |
+| Real-time updates | **WebSocket** (via FastAPI native support) | Streams tile-by-tile job progress to the frontend dashboard — gives a live, responsive demo feel vs. polling |
+| Job queue | **Celery + Redis** | Standard, well-understood async task pattern; directly demonstrates the scalability story. Tasks are idempotent with content-hash dedup and retry with exponential backoff |
+| Metadata database | **PostgreSQL + PostGIS** | PostGIS gives you spatial queries (AOI overlap search) for free — needed by both the catalog browse screen and the pipeline adapter's "search" semantics. Auto-initialized on startup |
+| Object storage | **MinIO** (self-hosted, S3-compatible) for local/hackathon dev; swap to **AWS S3** for a hosted demo | Same API either way — centralized through a `StorageService` class so the swap is zero code changes |
 | Tile serving | **titiler** (dynamic COG tiling service) | Don't hand-roll a tile server; this is a solved problem and titiler plugs directly into the FastAPI ecosystem |
 | Geospatial format handling | **GDAL / rasterio** | Industry-standard; has native PDS3/PDS4 drivers, which is exactly what you need to ingest ISRO/NASA planetary data |
+| Scientific computing | **NumPy + SciPy + Pillow** | NumPy for raster manipulation, SciPy for SSIM computation (uniform_filter), Pillow for bicubic upscale fallback and image format handling |
+| Health monitoring | **Custom `/health` endpoint** | Checks Postgres, Redis, and MinIO connectivity with latency measurements — judges can verify all services are live at a glance |
 
 ## 3. Machine Learning
 
@@ -67,16 +70,37 @@ lunares/
 ├── frontend/                 # React + TS app
 ├── backend/
 │   ├── api/                  # FastAPI app: routes, auth, schemas
+│   │   ├── main.py           # Entrypoint with lifespan events, router registration
+│   │   ├── config.py         # Centralized settings from .env
+│   │   ├── schemas.py        # Pydantic request/response models
+│   │   ├── dependencies.py   # FastAPI DI: DB session, storage, adapter
+│   │   └── routers/
+│   │       ├── scenes.py     # Upload, register, spatial search
+│   │       ├── jobs.py       # Submit, status, list, cancel
+│   │       ├── products.py   # Download, metrics, reports
+│   │       ├── pipeline.py   # ISRO Bhoonidhi contract endpoints
+│   │       └── ws.py         # WebSocket real-time job progress
+│   ├── services/
+│   │   └── storage.py        # Centralized S3/MinIO service (upload, download, presigned URLs)
 │   ├── adapters/
-│   │   └── bhoonidhi/        # ISRO pipeline adapter (live + mock impl)
-│   ├── workers/               # Celery tasks: tiling, inference, blending
-│   ├── models/                 # SR model definitions, uncertainty head
-│   └── db/                     # SQLAlchemy models, PostGIS migrations
+│   │   └── bhoonidhi/        # ISRO pipeline adapter (live + mock impl behind one interface)
+│   ├── workers/
+│   │   ├── celery_app.py     # Celery instance config
+│   │   ├── tasks.py          # Full processing pipeline: tile → infer → blend → store → score
+│   │   ├── tiling.py         # Tile grid computation + cosine-ramp feather blending
+│   │   └── metrics.py        # PSNR, SSIM, no-reference quality scoring
+│   ├── models/
+│   │   ├── sr_model.py       # SR inference wrapper (PyTorch + bicubic fallback)
+│   │   └── uncertainty.py    # Confidence estimation (MC-dropout / gradient heuristic)
+│   └── db/
+│       ├── database.py       # SQLAlchemy engine + session
+│       ├── models.py         # Scene, Job, Product, Feedback tables (PostGIS)
+│       └── init_db.py        # Auto-creates PostGIS extension + tables on startup
 ├── ml/
 │   ├── data/                   # dataset prep: PDS→COG, pairing/registration scripts
 │   ├── train/                  # training scripts, configs
 │   └── eval/                   # metrics, benchmark scripts
 ├── infra/
-│   └── docker-compose.yml
+│   └── docker-compose.yml      # Full stack: Postgres, Redis, MinIO, titiler, API, worker, frontend
 └── docs/                        # this document set
 ```

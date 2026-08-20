@@ -1,6 +1,7 @@
 version: "3.9"
 
 services:
+  # ── PostgreSQL + PostGIS ──────────────────────────────────────────
   postgres:
     image: postgis/postgis:16-3.4
     environment:
@@ -11,12 +12,26 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lunares}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
 
+  # ── Redis (job queue broker + result backend) ─────────────────────
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
 
+  # ── MinIO (S3-compatible object storage) ──────────────────────────
   minio:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
@@ -28,49 +43,93 @@ services:
       - "9001:9001"   # Console UI
     volumes:
       - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
 
-  # Dynamic COG tile server — serves LR/SR/confidence layers as XYZ tiles.
+  # ── MinIO bucket initialization ───────────────────────────────────
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${S3_ACCESS_KEY:-minioadmin} ${S3_SECRET_KEY:-minioadmin};
+      mc mb --ignore-existing local/${S3_BUCKET:-lunares-scenes};
+      echo 'Bucket ready';
+      exit 0;
+      "
+
+  # ── Dynamic COG tile server ──────────────────────────────────────
+  # Serves LR/SR/confidence layers as XYZ tiles.
   # See docs/Architecture.md section 3.7 for why this exists.
   titiler:
     image: ghcr.io/developmentseed/titiler:latest
     ports:
       - "8001:8000"
     environment:
-      - AWS_S3_ENDPOINT=minio:9000
+      - AWS_S3_ENDPOINT=http://minio:9000
       - AWS_ACCESS_KEY_ID=${S3_ACCESS_KEY:-minioadmin}
       - AWS_SECRET_ACCESS_KEY=${S3_SECRET_KEY:-minioadmin}
+      - AWS_VIRTUAL_HOSTING=false
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
 
+  # ── FastAPI backend ──────────────────────────────────────────────
   api:
     build:
       context: ../backend
       dockerfile: Dockerfile
     env_file:
       - ../.env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-lunares}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-lunares}
+      - REDIS_URL=redis://redis:6379/0
+      - S3_ENDPOINT_URL=http://minio:9000
+      - TITILER_URL=http://titiler:8000
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
-      - redis
-      - minio
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     volumes:
       - ../backend:/app
+    restart: unless-stopped
 
+  # ── Celery worker (inference pipeline) ───────────────────────────
   worker:
     build:
       context: ../backend
       dockerfile: Dockerfile
-    command: celery -A workers.celery_app worker --loglevel=info
+    command: celery -A workers.celery_app worker --loglevel=info --concurrency=2
     env_file:
       - ../.env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-lunares}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-lunares}
+      - REDIS_URL=redis://redis:6379/0
+      - S3_ENDPOINT_URL=http://minio:9000
     depends_on:
-      - redis
-      - postgres
-      - minio
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     volumes:
       - ../backend:/app
+    restart: unless-stopped
 
+  # ── Frontend (React + Vite) ──────────────────────────────────────
   frontend:
     build:
       context: ../frontend
@@ -81,6 +140,7 @@ services:
       - VITE_TILE_SERVER_URL=http://localhost:8001
     depends_on:
       - api
+    restart: unless-stopped
 
 volumes:
   pgdata:
