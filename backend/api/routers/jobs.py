@@ -19,9 +19,23 @@ from api.schemas import (
 )
 from db.models import Job, Scene, Product
 
+import time
+from fastapi import APIRouter, HTTPException, Query, BackgroundTasks
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def _execute_job_pipeline(scene_ids: list[str], job_id: str, model_name: str, generate_confidence_map: bool):
+    """Guaranteed in-process asynchronous execution worker."""
+    from workers.tasks import _run_pipeline
+    start_time = time.time()
+    for sid in scene_ids:
+        try:
+            _run_pipeline(None, sid, job_id, model_name, generate_confidence_map, start_time)
+        except Exception as exc:
+            logger.exception("Pipeline execution error for scene %s in job %s: %s", sid, job_id, exc)
 
 
 @router.get("/models", response_model=list[SRModelInfo])
@@ -36,10 +50,10 @@ def list_sr_models():
 # POST /jobs/ — submit a processing job
 # ──────────────────────────────────────────────────────────────────────
 @router.post("/", response_model=JobStatusResponse, status_code=201)
-def submit_job(payload: JobCreate, db: DbDep):
+def submit_job(payload: JobCreate, db: DbDep, background_tasks: BackgroundTasks):
     """
     Enqueue a job (single scene or batch).  Returns immediately with a job_id;
-    poll GET /jobs/{id} or connect via WebSocket for live progress.
+    processes asynchronously with live progress updates.
     """
     # Validate all scene IDs exist
     for sid in payload.scene_ids:
@@ -66,25 +80,16 @@ def submit_job(payload: JobCreate, db: DbDep):
     db.commit()
     db.refresh(job)
 
-    # Dispatch Celery tasks — one per scene in the batch
-    try:
-        from workers.tasks import process_scene
-        task_ids = []
-        for scene_id in payload.scene_ids:
-            result = process_scene.delay(
-                scene_id=scene_id,
-                job_id=job.id,
-                model_name=selected_model,
-                generate_confidence_map=payload.generate_confidence_map,
-            )
-            task_ids.append(result.id)
+    # Dispatch to background task runner for immediate guaranteed processing
+    background_tasks.add_task(
+        _execute_job_pipeline,
+        payload.scene_ids,
+        job.id,
+        selected_model,
+        payload.generate_confidence_map,
+    )
 
-        job.celery_task_id = task_ids[0] if task_ids else None
-        db.commit()
-    except Exception as exc:
-        logger.warning("Failed to dispatch Celery task: %s", exc)
-
-    logger.info("Job %s created with %d scene(s)", job.id, len(payload.scene_ids))
+    logger.info("Job %s created and queued with %d scene(s)", job.id, len(payload.scene_ids))
     return _job_to_response(job)
 
 

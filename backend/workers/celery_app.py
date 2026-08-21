@@ -10,6 +10,7 @@ celery_app = Celery(
     "lunares",
     broker=settings.redis_url,
     backend=settings.redis_url,
+    include=["workers.tasks"],
 )
 
 celery_app.conf.update(

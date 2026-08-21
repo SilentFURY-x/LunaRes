@@ -101,8 +101,20 @@ app.include_router(ws.router, tags=["websocket"])
 
 
 # ======================================================================
-# Health check — reports dependency status for all infra components
+# Root route & Health check
 # ======================================================================
+
+@app.get("/", tags=["meta"])
+def root():
+    """Root endpoint — returns API information and documentation link."""
+    return {
+        "service": "LunaRes API",
+        "version": "0.1.0",
+        "status": "healthy",
+        "docs_url": "/docs",
+        "frontend_url": "http://localhost:3000",
+        "description": "AI framework for satellite & planetary image enhancement",
+    }
 
 @app.get("/health", tags=["meta"])
 def health():

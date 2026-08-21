@@ -33,7 +33,7 @@ export default function WorkspacePage() {
   const navigate = useNavigate();
 
   // ── Upload tab state ──
-  const { upload, isUploading, scene: uploadedScene } = useFileUpload();
+  const { upload, isUploading, error: uploadError, scene: uploadedScene } = useFileUpload();
 
   // ── Catalog tab state ──
   const [searchParams, setSearchParams] = useState<SceneSearchParams>({});
@@ -44,8 +44,9 @@ export default function WorkspacePage() {
   const submitJobMutation = useSubmitJob();
 
   // Derive scene IDs available for job submission
-  const allSelectedIds: string[] = uploadedScene
-    ? [uploadedScene.id, ...Array.from(selectedSceneIds)]
+  const uploadedId = uploadedScene ? (uploadedScene.id || (uploadedScene as any).scene_id) : null;
+  const allSelectedIds: string[] = uploadedId
+    ? [uploadedId, ...Array.from(selectedSceneIds)]
     : Array.from(selectedSceneIds);
 
   // ── Handlers ──
@@ -110,12 +111,17 @@ export default function WorkspacePage() {
                 />
                 {isUploading && (
                   <p className="mt-4 font-mono font-medium text-xs uppercase tracking-widest text-secondaryText">
-                    Uploading…
+                    Uploading & Registering Scene…
                   </p>
                 )}
-                {uploadedScene && (
+                {uploadError && (
+                  <p className="mt-4 font-mono font-medium text-xs uppercase tracking-widest text-red-600 dark:text-red-400">
+                    Upload Failed: {uploadError.message}
+                  </p>
+                )}
+                {uploadedId && (
                   <p className="mt-4 font-mono font-medium text-xs uppercase tracking-widest text-green-600 dark:text-green-400">
-                    Scene {uploadedScene.id.slice(0, 8)} uploaded
+                    ✓ Scene {uploadedId.slice(0, 8)} ready for enhancement
                   </p>
                 )}
               </div>

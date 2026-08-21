@@ -31,10 +31,10 @@ def get_product_by_job_scene(job_id: str, scene_id: str, db: DbDep, store: Store
     Find the product for a given job + scene combination.
     This is how the frontend result viewer resolves a product from the URL params.
     """
-    product = db.query(Product).filter(
-        Product.job_id == job_id,
-        Product.scene_id == scene_id,
-    ).first()
+    query = db.query(Product).filter(Product.job_id == job_id)
+    if scene_id and scene_id != "_":
+        query = query.filter(Product.scene_id == scene_id)
+    product = query.first()
 
     if not product:
         raise HTTPException(

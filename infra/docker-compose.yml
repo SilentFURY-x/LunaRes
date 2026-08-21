@@ -80,6 +80,7 @@ services:
 
   # ── FastAPI backend ──────────────────────────────────────────────
   api:
+    image: lunares-backend:latest
     build:
       context: ../backend
       dockerfile: Dockerfile
@@ -112,9 +113,7 @@ services:
 
   # ── Celery worker (inference pipeline) ───────────────────────────
   worker:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
+    image: lunares-backend:latest
     command: celery -A workers.celery_app worker --loglevel=info --concurrency=2
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-lunares}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-lunares}

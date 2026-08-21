@@ -8,7 +8,7 @@
  * @see backend/api/schemas.py JobCreate
  */
 
-import { useState } from "react";
+import React, { useState, type FormEvent } from "react";
 import { SensorProfile, SRModelName } from "@/api/types";
 import type { JobCreate } from "@/api/types";
 import { RippleButton } from '@/components/ui/ripple-button';
@@ -37,7 +37,7 @@ export default function JobConfigForm({
   const [confidenceMap, setConfidenceMap] = useState(true);
   const [downstreamTask, setDownstreamTask] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (selectedSceneIds.length === 0) return;
 
