@@ -11,7 +11,7 @@
 import { useState, useCallback } from "react";
 import { pipelineSearch, pipelineFetch, pipelinePush } from "@/api/endpoints";
 import { submitJob } from "@/api/endpoints";
-import { InferenceMode } from "@/api/types";
+import { SRModelName } from "@/api/types";
 import ConsoleLog from "./ConsoleLog";
 import type { LogEntry } from "./ConsoleLog";
 import { RippleButton } from '@/components/ui/ripple-button';
@@ -83,9 +83,9 @@ export default function DemoRunner() {
       addLog("Submitting enhancement job…", "running");
       const jobResult = await submitJob({
         scene_ids: [fetchResult.scene_id],
-        inference_mode: InferenceMode.Fast,
+        sr_model: SRModelName.LunaFormerLunar,
         generate_confidence_map: true,
-        run_downstream_task_comparison: false,
+        run_downstream_comparison: false,
       });
       updateLastLog(
         "done",

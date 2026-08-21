@@ -104,6 +104,7 @@ services:
         condition: service_healthy
     volumes:
       - ../backend:/app
+      - ../models:/models:ro
     restart: unless-stopped
 
   # ── Celery worker (inference pipeline) ───────────────────────────
@@ -127,6 +128,7 @@ services:
         condition: service_healthy
     volumes:
       - ../backend:/app
+      - ../models:/models:ro
     restart: unless-stopped
 
   # ── Frontend (React + Vite) ──────────────────────────────────────

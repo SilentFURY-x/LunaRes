@@ -32,6 +32,11 @@ python-magic-bin==0.4.14
 # --- Scientific computing ---
 scipy==1.13.1
 
+# --- Super-resolution inference ---
+# Checkpoint loaders for HAT, SwinIR, and RRDBNet/Real-ESRGAN.
+torch>=2.1,<3
+spandrel==0.4.2
+
 # --- Auth / utility ---
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4

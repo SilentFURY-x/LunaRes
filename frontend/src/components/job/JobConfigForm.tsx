@@ -9,7 +9,7 @@
  */
 
 import { useState } from "react";
-import { InferenceMode, SensorProfile } from "@/api/types";
+import { SensorProfile, SRModelName } from "@/api/types";
 import type { JobCreate } from "@/api/types";
 import { RippleButton } from '@/components/ui/ripple-button';
 
@@ -33,7 +33,7 @@ export default function JobConfigForm({
   const [sensorProfile, setSensorProfile] = useState<SensorProfile>(
     suggestedProfile ?? SensorProfile.Lunar,
   );
-  const [mode, setMode] = useState<InferenceMode>(InferenceMode.Fast);
+  const [model, setModel] = useState<SRModelName>(SRModelName.LunaFormerLunar);
   const [confidenceMap, setConfidenceMap] = useState(true);
   const [downstreamTask, setDownstreamTask] = useState(false);
 
@@ -43,9 +43,9 @@ export default function JobConfigForm({
 
     onSubmit({
       scene_ids: selectedSceneIds,
-      inference_mode: mode,
+      sr_model: model,
       generate_confidence_map: confidenceMap,
-      run_downstream_task_comparison: downstreamTask,
+      run_downstream_comparison: downstreamTask,
     });
   }
 
@@ -72,7 +72,7 @@ export default function JobConfigForm({
           </select>
         </div>
 
-        {/* Inference Mode */}
+        {/* Super-resolution engine */}
         <div>
           <label className="block font-mono font-medium text-xs uppercase tracking-widest text-secondaryText mb-2">
             Inference Mode
@@ -82,12 +82,11 @@ export default function JobConfigForm({
             onChange={(e) => setMode(e.target.value as InferenceMode)}
             className="bg-background border border-divider text-secondaryText font-medium text-sm tracking-tight px-3 py-2 focus:outline-none focus:border-zinc-400 transition-colors"
           >
-            <option value={InferenceMode.Fast}>
-              Fast (Regression/GAN)
-            </option>
-            <option value={InferenceMode.HighFidelity}>
-              High-Fidelity (Diffusion)
-            </option>
+            <option value={SRModelName.LunaFormerLunar}>LunaFormer-Lunar (Primary)</option>
+            <option value={SRModelName.HAT}>HAT (Benchmark)</option>
+            <option value={SRModelName.SwinIR}>SwinIR (Benchmark)</option>
+            <option value={SRModelName.RealESRGAN}>Real-ESRGAN (Perceptual)</option>
+            <option value={SRModelName.Bicubic}>Bicubic (Baseline)</option>
           </select>
           <p className="font-mono font-medium text-xs uppercase tracking-widest text-zinc-500 mt-2">
             {mode === InferenceMode.Fast

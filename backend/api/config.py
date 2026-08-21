@@ -29,7 +29,11 @@ class Settings(BaseSettings):
     api_key_salt: str = "changeme"
 
     # ---------- Model ----------
-    sr_model_weights_path: str = "/models/sr_fast_v1.pt"
+    sr_model_weights_path: str = "/models/lunaformer-lunar.pt"
+    hat_weights_path: str = "/models/net_g_5000_hat.pth"
+    swinir_weights_path: str = "/models/net_g_20000_swinir.pth"
+    realesrgan_weights_path: str = "/models/net_g_15000_realesrgan.pth"
+    sr_device: str = "auto"  # auto / cpu / cuda
     uncertainty_model_weights_path: str = "/models/uncertainty_v1.pt"
     model_version: str = "lunares-sr-v0.1.0"
 

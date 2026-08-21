@@ -15,12 +15,21 @@ from api.schemas import (
     JobStatus,
     JobStatusResponse,
     JobListResponse,
+    SRModelInfo,
 )
 from db.models import Job, Scene, Product
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+@router.get("/models", response_model=list[SRModelInfo])
+def list_sr_models():
+    """List selectable engines and whether their external weights are installed."""
+    from models.registry import list_model_availability
+
+    return list_model_availability()
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -43,10 +52,14 @@ def submit_job(payload: JobCreate, db: DbDep):
                 detail=f"Scene {sid} not found. Upload it first via POST /scenes/upload.",
             )
 
+    # Keep the existing database column for compatibility while storing the
+    # explicit model id selected by new clients.
+    selected_model = payload.sr_model.value
+
     # Create job record
     job = Job(
         scene_ids=payload.scene_ids,
-        inference_mode=payload.inference_mode.value,
+        inference_mode=selected_model,
         generate_confidence_map=payload.generate_confidence_map,
         run_downstream_comparison=payload.run_downstream_comparison,
         status="queued",
@@ -63,7 +76,7 @@ def submit_job(payload: JobCreate, db: DbDep):
             result = process_scene.delay(
                 scene_id=scene_id,
                 job_id=job.id,
-                inference_mode=payload.inference_mode.value,
+                model_name=selected_model,
                 generate_confidence_map=payload.generate_confidence_map,
             )
             task_ids.append(result.id)
@@ -194,6 +207,7 @@ def _job_to_response(job: Job) -> JobStatusResponse:
         job_id=job.id,
         status=job.status,
         inference_mode=job.inference_mode,
+        sr_model=job.inference_mode,
         tiles_total=total,
         tiles_complete=complete,
         progress_pct=pct,
