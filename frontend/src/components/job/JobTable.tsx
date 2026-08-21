@@ -55,7 +55,7 @@ export default function JobTable({
           return (
             <tr key={job.job_id} className="border-b border-crater/50">
               <td className="py-2 pr-4 font-mono text-xs">{job.job_id.slice(0, 8)}</td>
-              <td className="py-2 pr-4 text-xs">{job.inference_mode}</td>
+              <td className="py-2 pr-4 text-xs">{job.sr_model ?? job.inference_mode}</td>
               <td className="py-2 pr-4 text-xs">{job.scene_count}</td>
               <td className="py-2 pr-4">
                 <StatusBadge status={job.status} />

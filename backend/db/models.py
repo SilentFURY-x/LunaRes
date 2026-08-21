@@ -59,7 +59,8 @@ class Job(Base):
     id = Column(String, primary_key=True, default=gen_uuid)
     scene_ids = Column(JSON, nullable=False)        # list of Scene.id — supports batch
     status = Column(String, default="queued", index=True)
-    inference_mode = Column(String, default="fast")  # fast / high_fidelity
+    # Retained column name for database compatibility; stores the SR model id.
+    inference_mode = Column(String, default="lunaformer_lunar")
     generate_confidence_map = Column(Boolean, default=True)
     run_downstream_comparison = Column(Boolean, default=False)
     tiles_total = Column(Integer, default=0)

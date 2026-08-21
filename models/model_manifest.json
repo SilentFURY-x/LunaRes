@@ -1,0 +1,24 @@
+{
+  "source_folder": "https://drive.google.com/drive/folders/1wmWoJ2gYrbt6Fqkyr3x8oS-cvFEfCic1",
+  "models": [
+    {
+      "id": "hat",
+      "filename": "net_g_5000_hat.pth",
+      "google_drive_file_id": "1MtvatHY6qJYo0KXXK8EMUiJhSIAJ-wzR",
+      "size_bytes": 170282399
+    },
+    {
+      "id": "swinir",
+      "filename": "net_g_20000_swinir.pth",
+      "google_drive_file_id": "1rUuaf1_sMINN3l4-OrV-G1xPZGHGYc-M",
+      "size_bytes": 67860853
+    },
+    {
+      "id": "realesrgan",
+      "filename": "net_g_15000_realesrgan.pth",
+      "google_drive_file_id": "1Q8Rxo54W9snVRhImRY_DOBGaXZ20QzRf",
+      "size_bytes": 134057493,
+      "optional": true
+    }
+  ]
+}

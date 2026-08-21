@@ -29,6 +29,8 @@ ml/data/cache/
 *.ckpt
 *.pt
 *.pth
+!models/*.pt
+!models/*.pth
 
 # OS / editor
 .DS_Store

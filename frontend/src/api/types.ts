@@ -21,6 +21,14 @@ export enum InferenceMode {
   HighFidelity = "high_fidelity",
 }
 
+export enum SRModelName {
+  LunaFormerLunar = "lunaformer_lunar",
+  HAT = "hat",
+  SwinIR = "swinir",
+  RealESRGAN = "realesrgan",
+  Bicubic = "bicubic",
+}
+
 export enum JobStatus {
   Queued = "queued",
   Tiling = "tiling",
@@ -72,9 +80,9 @@ export interface SceneSearchParams {
 /** POST /jobs/ request body — mirrors backend JobCreate */
 export interface JobCreate {
   scene_ids: string[];
-  inference_mode: InferenceMode;
+  sr_model: SRModelName;
   generate_confidence_map: boolean;
-  run_downstream_task_comparison: boolean;
+  run_downstream_comparison: boolean;
 }
 
 /** GET /jobs/:id response — mirrors backend JobStatusResponse */
@@ -85,6 +93,7 @@ export interface JobStatusResponse {
   tiles_complete: number;
   created_at: string;
   updated_at: string;
+  sr_model: SRModelName;
   /** Only present for batch jobs — per-scene breakdown */
   scene_progress?: SceneProgress[];
 }
@@ -100,7 +109,8 @@ export interface SceneProgress {
 export interface JobListItem {
   job_id: string;
   status: JobStatus;
-  inference_mode: InferenceMode;
+  inference_mode: string;
+  sr_model: SRModelName;
   tiles_total: number;
   tiles_complete: number;
   scene_count: number;
