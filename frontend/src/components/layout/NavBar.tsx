@@ -12,9 +12,9 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { useHealth } from "@/hooks/useHealth";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 
 const NAV_LINKS = [
-  { to: "/", label: "LunaRes" },
   { to: "/workspace", label: "Workspace" },
   { to: "/jobs", label: "Dashboard" },
   { to: "/pipeline", label: "ISRO Pipeline" },
@@ -25,7 +25,7 @@ export default function NavBar() {
   const { isHealthy, isError, isLoading } = useHealth();
 
   function healthColor() {
-    if (isLoading) return "bg-regolith/30";
+    if (isLoading) return "bg-zinc-400/30";
     if (isError) return "bg-red-500";
     if (isHealthy) return "bg-green-500";
     return "bg-yellow-500";
@@ -39,35 +39,43 @@ export default function NavBar() {
   }
 
   return (
-    <nav className="border-b border-crater px-6 py-3 flex items-center justify-between">
+    <nav className="border-b border-divider px-6 py-4 flex items-center justify-between">
+      {/* Website Name (Left) */}
+      <Link to="/" className="text-xl font-display font-extrabold uppercase tracking-wider text-primaryText font-semibold">
+        LunaRes
+      </Link>
+
+      {/* Navigation (Right) */}
       <div className="flex items-center gap-6">
-        {NAV_LINKS.map((link) => {
-          const isActive =
-            link.to === "/"
-              ? location.pathname === "/"
-              : location.pathname.startsWith(link.to);
+        <div className="flex items-center gap-6 mr-4">
+          {NAV_LINKS.map((link) => {
+            const isActive = location.pathname.startsWith(link.to);
 
-          return (
-            <Link
-              key={link.to}
-              to={link.to}
-              className={`text-sm font-display tracking-wide ${
-                isActive ? "text-signal" : "text-regolith/70"
-              }`}
-            >
-              {link.label}
-            </Link>
-          );
-        })}
-      </div>
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`text-sm font-display font-extrabold uppercase tracking-wider tracking-wide ${
+                  isActive ? "text-primaryText" : "text-secondaryText hover:opacity-80"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </div>
 
-      {/* Health indicator */}
-      <div className="flex items-center gap-2 text-xs text-regolith/60">
-        <span
-          className={`w-2 h-2 rounded-full ${healthColor()}`}
-          title={healthLabel()}
-        />
-        <span>{healthLabel()}</span>
+        {/* Health indicator */}
+        <div className="flex items-center gap-2 text-xs text-secondaryText">
+          <span
+            className={`w-2 h-2 rounded-full ${healthColor()}`}
+            title={healthLabel()}
+          />
+          <span>{healthLabel()}</span>
+        </div>
+
+        {/* Theme Toggler */}
+        <AnimatedThemeToggler />
       </div>
     </nav>
   );

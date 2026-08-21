@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import { RippleButton } from '@/components/ui/ripple-button';
 
 interface Tab {
   id: string;
@@ -34,19 +35,19 @@ export default function TabSwitcher({
 
   return (
     <div>
-      <div className="flex gap-1 border-b border-crater mb-4">
+      <div className="flex gap-4 border-b border-divider">
         {tabs.map((tab) => (
-          <button
+          <RippleButton
             key={tab.id}
             onClick={() => handleClick(tab.id)}
-            className={`px-4 py-2 text-sm font-body ${
+            className={`pb-3 font-mono font-medium text-xs uppercase tracking-widest transition-colors ${
               active === tab.id
-                ? "border-b-2 border-signal text-signal"
-                : "text-regolith/60"
+                ? "border-b-2 border-white text-primaryText"
+                : "border-b-2 border-transparent text-secondaryText hover:text-secondaryText"
             }`}
           >
             {tab.label}
-          </button>
+          </RippleButton>
         ))}
       </div>
       {children(active)}

@@ -11,6 +11,7 @@ import { useState } from "react";
 import { getDownloadUrl } from "@/api/endpoints";
 import { pipelinePush } from "@/api/endpoints";
 import type { ExportFormat } from "@/api/types";
+import { RippleButton } from '@/components/ui/ripple-button';
 
 interface ExportActionsProps {
   productId: string;
@@ -53,31 +54,31 @@ export default function ExportActions({ productId }: ExportActionsProps) {
   ];
 
   return (
-    <div className="border border-crater p-3">
-      <h4 className="text-xs text-regolith/50 mb-2 font-display">Export</h4>
+    <div className="border border-divider p-3">
+      <h4 className="text-xs text-secondaryText mb-2 font-display font-extrabold uppercase tracking-wider text-primaryText">Export</h4>
 
       <div className="flex flex-col gap-1">
         {DOWNLOADS.map(({ format, label }) => (
-          <button
+          <RippleButton
             key={format}
             onClick={() => handleDownload(format)}
             disabled={downloading === format}
-            className="text-left text-sm text-signal px-2 py-1 border border-crater"
+            className="text-left text-sm text-primaryText px-2 py-1 border border-divider"
           >
             {downloading === format ? "Preparing…" : label}
-          </button>
+          </RippleButton>
         ))}
 
-        <button
+        <RippleButton
           onClick={handlePush}
           disabled={pushing}
-          className="text-left text-sm text-flare px-2 py-1 border border-crater mt-1"
+          className="text-left text-sm text-red-600 dark:text-red-400 px-2 py-1 border border-divider mt-1"
         >
           {pushing ? "Pushing…" : "Push to ISRO Pipeline"}
-        </button>
+        </RippleButton>
 
         {pushStatus && (
-          <p className="text-xs text-regolith/60 mt-1">{pushStatus}</p>
+          <p className="text-xs text-secondaryText mt-1">{pushStatus}</p>
         )}
       </div>
     </div>

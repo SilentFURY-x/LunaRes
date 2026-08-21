@@ -40,7 +40,7 @@ export default function CompareSlider({
         }
         style={{ width: "100%", height: "500px" }}
       />
-      <div className="flex justify-between text-xs text-regolith/50 mt-1 px-1">
+      <div className="flex justify-between text-xs text-secondaryText mt-1 px-1">
         <span>{lrLabel}</span>
         <span>{srLabel}</span>
       </div>

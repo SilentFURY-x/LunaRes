@@ -57,30 +57,30 @@ const CONTRACT_ENDPOINTS = [
 
 export default function ContractDisplay() {
   return (
-    <div className="border border-crater p-4">
-      <h3 className="text-sm font-display mb-3">Bhoonidhi API Contract</h3>
-      <p className="text-xs text-regolith/50 mb-4">
+    <div className="border border-divider p-4">
+      <h3 className="text-sm font-display font-extrabold uppercase tracking-wider text-primaryText mb-3">Bhoonidhi API Contract</h3>
+      <p className="text-xs text-secondaryText mb-4">
         These endpoints mirror Bhoonidhi's search/fetch/order pattern.
         The backend routes to a mock or live adapter transparently.
       </p>
 
       <div className="flex flex-col gap-4">
         {CONTRACT_ENDPOINTS.map((ep) => (
-          <div key={ep.path} className="border border-crater/50 p-3">
+          <div key={ep.path} className="border border-divider p-3">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-mono bg-signal/20 text-signal px-1">
+              <span className="text-xs font-mono bg-glassActive text-primaryText px-1">
                 {ep.method}
               </span>
-              <span className="text-sm font-mono text-regolith">{ep.path}</span>
+              <span className="text-sm font-mono text-secondaryText">{ep.path}</span>
             </div>
-            <p className="text-xs text-regolith/60 mb-2">{ep.description}</p>
+            <p className="text-xs text-secondaryText mb-2">{ep.description}</p>
 
             {ep.params.length > 0 && (
               <div className="mb-2">
-                <span className="text-xs text-regolith/40">Parameters:</span>
+                <span className="text-xs text-secondaryText">Parameters:</span>
                 <div className="ml-2">
                   {ep.params.map((p) => (
-                    <div key={p.name} className="text-xs font-mono text-regolith/60">
+                    <div key={p.name} className="text-xs font-mono text-secondaryText">
                       {p.name}: {p.type} (e.g., {p.example})
                     </div>
                   ))}
@@ -89,10 +89,10 @@ export default function ContractDisplay() {
             )}
 
             <details>
-              <summary className="text-xs text-signal cursor-pointer">
+              <summary className="text-xs text-primaryText cursor-pointer">
                 Response shape
               </summary>
-              <pre className="text-xs font-mono text-regolith/70 mt-1 overflow-x-auto">
+              <pre className="text-xs font-mono text-secondaryText mt-1 overflow-x-auto">
                 {ep.response}
               </pre>
             </details>

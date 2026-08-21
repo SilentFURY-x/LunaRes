@@ -14,13 +14,13 @@ export default function JobProgressBar({ tilesComplete, tilesTotal }: JobProgres
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-2 bg-crater">
+      <div className="flex-1 h-2 bg-glassBase">
         <div
-          className="h-full bg-signal"
+          className="h-full bg-glassActive"
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="text-xs text-regolith/60 font-mono w-16 text-right">
+      <span className="text-xs text-secondaryText font-mono w-16 text-right">
         {tilesComplete}/{tilesTotal}
       </span>
     </div>

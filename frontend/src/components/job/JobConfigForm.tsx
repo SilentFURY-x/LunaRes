@@ -11,6 +11,7 @@
 import { useState } from "react";
 import { SensorProfile, SRModelName } from "@/api/types";
 import type { JobCreate } from "@/api/types";
+import { RippleButton } from '@/components/ui/ripple-button';
 
 interface JobConfigFormProps {
   /** Scene IDs selected for this job (from upload or catalog selection) */
@@ -51,19 +52,19 @@ export default function JobConfigForm({
   const disableSubmit = selectedSceneIds.length === 0 || isSubmitting;
 
   return (
-    <form onSubmit={handleSubmit} className="border border-crater p-4 mt-4">
-      <h3 className="text-sm font-display mb-3">Job Configuration</h3>
+    <form onSubmit={handleSubmit} className="pt-2">
+      <h3 className="font-display font-extrabold text-lg uppercase tracking-wider text-primaryText mb-6">Job Configuration</h3>
 
-      <div className="flex flex-wrap gap-6 mb-4">
+      <div className="flex flex-wrap gap-8 mb-6">
         {/* Model Profile */}
         <div>
-          <label className="block text-xs text-regolith/50 mb-1">
+          <label className="block font-mono font-medium text-xs uppercase tracking-widest text-secondaryText mb-2">
             Model Profile
           </label>
           <select
             value={sensorProfile}
             onChange={(e) => setSensorProfile(e.target.value as SensorProfile)}
-            className="bg-basalt border border-crater text-regolith text-sm px-2 py-1"
+            className="bg-background border border-divider text-secondaryText font-medium text-sm tracking-tight px-3 py-2 focus:outline-none focus:border-zinc-400 transition-colors"
           >
             <option value={SensorProfile.Lunar}>Lunar Panchromatic</option>
             <option value={SensorProfile.EarthOptical}>Earth-optical</option>
@@ -73,13 +74,13 @@ export default function JobConfigForm({
 
         {/* Super-resolution engine */}
         <div>
-          <label className="block text-xs text-regolith/50 mb-1">
-            Enhancement Model
+          <label className="block font-mono font-medium text-xs uppercase tracking-widest text-secondaryText mb-2">
+            Inference Mode
           </label>
           <select
-            value={model}
-            onChange={(e) => setModel(e.target.value as SRModelName)}
-            className="bg-basalt border border-crater text-regolith text-sm px-2 py-1"
+            value={mode}
+            onChange={(e) => setMode(e.target.value as InferenceMode)}
+            className="bg-background border border-divider text-secondaryText font-medium text-sm tracking-tight px-3 py-2 focus:outline-none focus:border-zinc-400 transition-colors"
           >
             <option value={SRModelName.LunaFormerLunar}>LunaFormer-Lunar (Primary)</option>
             <option value={SRModelName.HAT}>HAT (Benchmark)</option>
@@ -87,52 +88,52 @@ export default function JobConfigForm({
             <option value={SRModelName.RealESRGAN}>Real-ESRGAN (Perceptual)</option>
             <option value={SRModelName.Bicubic}>Bicubic (Baseline)</option>
           </select>
-          <p className="text-xs text-regolith/40 mt-1">
-            {model === SRModelName.LunaFormerLunar
-              ? "Default model optimized for the LunaRes lunar workflow"
-              : model === SRModelName.RealESRGAN
-                ? "Sharper-looking output; validate before scientific use"
-                : "Comparison engine for benchmarking LunaFormer-Lunar"}
+          <p className="font-mono font-medium text-xs uppercase tracking-widest text-zinc-500 mt-2">
+            {mode === InferenceMode.Fast
+              ? "Lower latency, deterministic output"
+              : "Sharper perceptual detail, higher compute cost"}
           </p>
         </div>
       </div>
 
       {/* Toggles */}
-      <div className="flex flex-wrap gap-6 mb-4">
-        <label className="flex items-center gap-2 text-sm">
+      <div className="flex flex-wrap gap-8 mb-8">
+        <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
             checked={confidenceMap}
             onChange={(e) => setConfidenceMap(e.target.checked)}
+            className="accent-zinc-400"
           />
-          <span>Generate confidence map</span>
+          <span className="font-medium text-sm tracking-tight text-secondaryText">Generate confidence map</span>
         </label>
 
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
             checked={downstreamTask}
             onChange={(e) => setDownstreamTask(e.target.checked)}
+            className="accent-zinc-400"
           />
-          <span>Run downstream task comparison (stretch)</span>
+          <span className="font-medium text-sm tracking-tight text-secondaryText">Run downstream task comparison (stretch)</span>
         </label>
       </div>
 
       {/* Submit */}
-      <div className="flex items-center gap-3">
-        <button
+      <div className="flex items-center gap-4">
+        <RippleButton
           type="submit"
           disabled={disableSubmit}
-          className={`px-4 py-2 text-sm font-display ${
+          className={`px-8 py-3 font-medium text-sm tracking-tight rounded transition-colors ${
             disableSubmit
-              ? "bg-crater text-regolith/40 cursor-not-allowed"
-              : "bg-signal text-void"
+              ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+              : "bg-ctaBtn text-primaryText hover:opacity-80"
           }`}
         >
           {isSubmitting ? "Submitting…" : "Run Enhancement"}
-        </button>
+        </RippleButton>
 
-        <span className="text-xs text-regolith/50">
+        <span className="font-mono font-medium text-xs uppercase tracking-widest text-secondaryText">
           {selectedSceneIds.length} scene{selectedSceneIds.length !== 1 ? "s" : ""} selected
         </span>
       </div>

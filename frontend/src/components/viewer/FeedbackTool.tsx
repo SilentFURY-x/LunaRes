@@ -11,6 +11,7 @@
 import { useState } from "react";
 import { submitFeedback } from "@/api/endpoints";
 import type { FeedbackCreate, GeoJSONPolygon } from "@/api/types";
+import { RippleButton } from '@/components/ui/ripple-button';
 
 interface FeedbackToolProps {
   productId: string;
@@ -50,29 +51,29 @@ export default function FeedbackTool({ productId }: FeedbackToolProps) {
   }
 
   return (
-    <div className="border border-crater p-3">
-      <h4 className="text-xs text-regolith/50 mb-2 font-display">
+    <div className="border border-divider p-3">
+      <h4 className="text-xs text-secondaryText mb-2 font-display font-extrabold uppercase tracking-wider text-primaryText">
         Flag Region (Feedback)
       </h4>
 
       {submitted ? (
-        <p className="text-sm text-green-400">Feedback submitted. Thank you.</p>
+        <p className="text-sm text-green-600 dark:text-green-400">Feedback submitted. Thank you.</p>
       ) : (
         <div>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Describe the issue with this region…"
-            className="w-full bg-basalt border border-crater text-regolith text-sm px-2 py-1 mb-2"
+            className="w-full bg-background border border-divider text-secondaryText text-sm px-2 py-1 mb-2"
             rows={2}
           />
-          <button
+          <RippleButton
             onClick={handleSubmit}
             disabled={isSubmitting || !note.trim()}
-            className="text-xs text-flare border border-flare px-2 py-1"
+            className="text-xs text-red-600 dark:text-red-400 border border-flare px-2 py-1"
           >
             {isSubmitting ? "Submitting…" : "Submit Feedback"}
-          </button>
+          </RippleButton>
         </div>
       )}
     </div>

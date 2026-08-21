@@ -14,13 +14,13 @@ interface StatusBadgeProps {
 }
 
 const STATUS_STYLES: Record<JobStatus, string> = {
-  queued: "bg-crater text-regolith/70",
-  tiling: "bg-signal/20 text-signal",
-  inferring: "bg-signal/30 text-signal",
-  blending: "bg-signal/40 text-signal",
-  complete: "bg-green-900/40 text-green-400",
-  failed: "bg-red-900/40 text-red-400",
-  cancelled: "bg-crater text-regolith/50",
+  queued: "bg-glassBase text-secondaryText",
+  tiling: "bg-glassActive text-primaryText",
+  inferring: "bg-glassActive text-primaryText",
+  blending: "bg-glassActive text-primaryText",
+  complete: "bg-green-900/40 text-green-600 dark:text-green-400",
+  failed: "bg-red-900/40 text-red-600 dark:text-red-400",
+  cancelled: "bg-glassBase text-secondaryText",
 };
 
 const STATUS_LABELS: Record<JobStatus, string> = {
