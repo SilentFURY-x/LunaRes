@@ -1,0 +1,4 @@
+!weights/
+!weights/*.pt
+!weights/*.pth
+!external/reference_pipeline/LightEnhancement/ckpt/*.pth
