@@ -5,19 +5,22 @@
       "id": "hat",
       "filename": "net_g_5000_hat.pth",
       "google_drive_file_id": "1MtvatHY6qJYo0KXXK8EMUiJhSIAJ-wzR",
-      "size_bytes": 170282399
+      "size_bytes": 170282399,
+      "sha256": "f854e17cc05420ef000ca70c7a5e730e07d9a2bc68fc908d3b37764b1d5c1d2e"
     },
     {
       "id": "swinir",
       "filename": "net_g_20000_swinir.pth",
       "google_drive_file_id": "1rUuaf1_sMINN3l4-OrV-G1xPZGHGYc-M",
-      "size_bytes": 67860853
+      "size_bytes": 67860853,
+      "sha256": "7a88b7b2fe66692774190f5acd224b2a71a25f375835ee6eeaafd7b2bcae91fc"
     },
     {
       "id": "realesrgan",
       "filename": "net_g_15000_realesrgan.pth",
       "google_drive_file_id": "1Q8Rxo54W9snVRhImRY_DOBGaXZ20QzRf",
       "size_bytes": 134057493,
+      "sha256": "b5ed2b1ae918f6c66385a90046757347ded5723aede26a691c500bd5eede7899",
       "optional": true
     }
   ]
