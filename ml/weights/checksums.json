@@ -1,0 +1,30 @@
+{
+  "NAFNet-SIDD-width64.pth": {
+    "size_bytes": 464154961,
+    "sha256": "cd685efaae01f7c4e9951f2deab05780079c8eb1e49ed664b72f6db04dabb445"
+  },
+  "lunar_T-GAN.pt": {
+    "size_bytes": 598417,
+    "sha256": "70cea6f2732dc77ace5c05197ffa2c6de25afa494471baa254228b2bf523f7fd"
+  },
+  "net_g_15000_realesrgan.pth": {
+    "size_bytes": 134057493,
+    "sha256": "b5ed2b1ae918f6c66385a90046757347ded5723aede26a691c500bd5eede7899"
+  },
+  "net_g_20000_realesrgan.pth": {
+    "size_bytes": 134070939,
+    "sha256": "6536557b4f8c13e65de48c218712447eb51c95efc3032f0529a5547819c64a87"
+  },
+  "net_g_20000_swinir.pth": {
+    "size_bytes": 67860853,
+    "sha256": "7a88b7b2fe66692774190f5acd224b2a71a25f375835ee6eeaafd7b2bcae91fc"
+  },
+  "net_g_48600_realesrgan.pth": {
+    "size_bytes": 134070939,
+    "sha256": "7b3001ff9a7166fb856d4af4170f0dad718ec4bd4fbb9e89b86022bae60d1da1"
+  },
+  "net_g_5000_hat.pth": {
+    "size_bytes": 170282399,
+    "sha256": "f854e17cc05420ef000ca70c7a5e730e07d9a2bc68fc908d3b37764b1d5c1d2e"
+  }
+}
