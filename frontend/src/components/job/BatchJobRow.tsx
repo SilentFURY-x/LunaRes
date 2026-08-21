@@ -8,6 +8,7 @@ import { useState } from "react";
 import type { SceneProgress } from "@/api/types";
 import StatusBadge from "./StatusBadge";
 import JobProgressBar from "./JobProgressBar";
+import { RippleButton } from '@/components/ui/ripple-button';
 
 interface BatchJobRowProps {
   sceneProgress: SceneProgress[];
@@ -20,18 +21,18 @@ export default function BatchJobRow({ sceneProgress }: BatchJobRowProps) {
 
   return (
     <div className="mt-1">
-      <button
+      <RippleButton
         onClick={() => setExpanded(!expanded)}
-        className="text-xs text-signal"
+        className="text-xs text-primaryText"
       >
         {expanded ? "▾ Hide" : "▸ Show"} {sceneProgress.length} scene{sceneProgress.length !== 1 ? "s" : ""}
-      </button>
+      </RippleButton>
 
       {expanded && (
         <div className="ml-4 mt-1 flex flex-col gap-1">
           {sceneProgress.map((sp) => (
             <div key={sp.scene_id} className="flex items-center gap-3 text-xs">
-              <span className="text-regolith/60 w-24 truncate font-mono">
+              <span className="text-secondaryText w-24 truncate font-mono">
                 {sp.scene_id.slice(0, 8)}
               </span>
               <StatusBadge status={sp.status} />

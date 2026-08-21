@@ -26,14 +26,14 @@ export default function ConfidenceOverlay({
 }: ConfidenceOverlayProps) {
   if (unavailable) {
     return (
-      <div className="px-3 py-2 border border-crater text-xs text-regolith/40">
+      <div className="px-3 py-2 border border-divider text-xs text-secondaryText">
         Confidence map not available for this product
       </div>
     );
   }
 
   return (
-    <div className="px-3 py-2 border border-crater">
+    <div className="px-3 py-2 border border-divider">
       <label className="flex items-center gap-2 text-sm mb-2">
         <input
           type="checkbox"
@@ -45,7 +45,7 @@ export default function ConfidenceOverlay({
 
       {enabled && (
         <div className="flex items-center gap-2">
-          <span className="text-xs text-regolith/50">Opacity</span>
+          <span className="text-xs text-secondaryText">Opacity</span>
           <input
             type="range"
             min={0}
@@ -54,7 +54,7 @@ export default function ConfidenceOverlay({
             onChange={(e) => onOpacityChange(Number(e.target.value) / 100)}
             className="flex-1"
           />
-          <span className="text-xs font-mono text-regolith/60 w-8">
+          <span className="text-xs font-mono text-secondaryText w-8">
             {Math.round(opacity * 100)}%
           </span>
         </div>

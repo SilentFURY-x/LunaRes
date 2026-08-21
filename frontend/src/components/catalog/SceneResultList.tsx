@@ -7,6 +7,7 @@
  */
 
 import type { SceneSummary } from "@/api/types";
+import { RippleButton } from '@/components/ui/ripple-button';
 
 interface SceneResultListProps {
   scenes: SceneSummary[];
@@ -40,32 +41,32 @@ export default function SceneResultList({
   }
 
   if (isLoading) {
-    return <p className="text-sm text-regolith/50 py-4">Searching scenes…</p>;
+    return <p className="text-sm text-secondaryText py-4">Searching scenes…</p>;
   }
 
   if (scenes.length === 0) {
-    return <p className="text-sm text-regolith/50 py-4">No scenes found. Draw an AOI on the map to search.</p>;
+    return <p className="text-sm text-secondaryText py-4">No scenes found. Draw an AOI on the map to search.</p>;
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-regolith/50">
+        <span className="text-xs text-secondaryText">
           {scenes.length} scene{scenes.length !== 1 ? "s" : ""} found
         </span>
-        <button
+        <RippleButton
           onClick={toggleAll}
-          className="text-xs text-signal"
+          className="text-xs text-primaryText"
         >
           {selectedIds.size === scenes.length ? "Deselect all" : "Select all"}
-        </button>
+        </RippleButton>
       </div>
 
       <div className="flex flex-col gap-1">
         {scenes.map((scene) => (
           <label
             key={scene.id}
-            className="flex items-center gap-3 px-3 py-2 border border-crater cursor-pointer"
+            className="flex items-center gap-3 px-3 py-2 border border-divider cursor-pointer"
           >
             <input
               type="checkbox"
@@ -73,10 +74,10 @@ export default function SceneResultList({
               onChange={() => toggleScene(scene.id)}
             />
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-regolith truncate">
+              <p className="text-sm text-secondaryText truncate">
                 {scene.product_id ?? scene.id}
               </p>
-              <p className="text-xs text-regolith/50">
+              <p className="text-xs text-secondaryText">
                 {scene.sensor_profile}
                 {scene.gsd_meters ? ` · ${scene.gsd_meters}m GSD` : ""}
                 {scene.acquisition_time

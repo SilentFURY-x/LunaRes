@@ -72,8 +72,8 @@ export default function DropZone({ onFileSelected, disabled }: DropZoneProps) {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onClick={disabled ? undefined : handleClick}
-        className={`border-2 border-dashed px-6 py-10 text-center cursor-pointer ${
-          isDragOver ? "border-signal bg-signal/5" : "border-crater"
+        className={`border border-dashed px-8 py-16 text-center cursor-pointer transition-colors ${
+          isDragOver ? "border-white bg-glassBase" : "border-divider hover:border-zinc-400"
         } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <input
@@ -86,13 +86,13 @@ export default function DropZone({ onFileSelected, disabled }: DropZoneProps) {
         />
 
         {selectedName ? (
-          <p className="text-sm text-signal">{selectedName}</p>
+          <p className="font-medium text-sm tracking-tight text-primaryText">{selectedName}</p>
         ) : (
           <div>
-            <p className="text-sm text-regolith/70 mb-2">
+            <p className="font-medium text-sm tracking-tight text-secondaryText mb-3">
               Drag and drop a file here, or click to browse
             </p>
-            <p className="text-xs text-regolith/40">
+            <p className="font-mono font-medium text-xs uppercase tracking-widest text-secondaryText">
               Supported: {SUPPORTED_FORMATS_DISPLAY} · Max 500 MB
             </p>
           </div>
@@ -100,7 +100,7 @@ export default function DropZone({ onFileSelected, disabled }: DropZoneProps) {
       </div>
 
       {error && (
-        <p className="mt-2 text-sm text-flare">{error}</p>
+        <p className="mt-3 font-medium text-sm tracking-tight text-red-600 dark:text-red-400">{error}</p>
       )}
     </div>
   );

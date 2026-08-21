@@ -94,23 +94,27 @@ export default function WorkspacePage() {
   );
 
   return (
-    <div className="px-6 py-6">
-      <h2 className="font-display text-xl mb-4">Enhance an Image</h2>
+    <div className="px-6 py-12 max-w-4xl mx-auto">
+      <h2 className="font-display font-extrabold text-2xl uppercase tracking-wider text-primaryText mb-8">
+        Enhance an Image
+      </h2>
 
       <TabSwitcher tabs={TABS} defaultTab="upload">
         {(activeTab) => (
           <div>
             {activeTab === "upload" && (
-              <div>
+              <div className="py-6">
                 <DropZone
                   onFileSelected={handleFileSelected}
                   disabled={isUploading}
                 />
                 {isUploading && (
-                  <p className="mt-2 text-sm text-regolith/50">Uploading…</p>
+                  <p className="mt-4 font-mono font-medium text-xs uppercase tracking-widest text-secondaryText">
+                    Uploading…
+                  </p>
                 )}
                 {uploadedScene && (
-                  <p className="mt-2 text-sm text-green-400">
+                  <p className="mt-4 font-mono font-medium text-xs uppercase tracking-widest text-green-600 dark:text-green-400">
                     Scene {uploadedScene.id.slice(0, 8)} uploaded
                   </p>
                 )}
@@ -118,9 +122,9 @@ export default function WorkspacePage() {
             )}
 
             {activeTab === "catalog" && (
-              <div>
+              <div className="py-6">
                 <CatalogFilters onFilterChange={handleFilterChange} />
-                <div className="mt-4">
+                <div className="mt-6">
                   <CatalogMap
                     onAoiDrawn={handleAoiDrawn}
                     sceneFootprints={
@@ -133,7 +137,7 @@ export default function WorkspacePage() {
                     }
                   />
                 </div>
-                <div className="mt-4">
+                <div className="mt-6 border-t border-divider pt-6">
                   <SceneResultList
                     scenes={catalogScenes ?? []}
                     selectedIds={selectedSceneIds}
@@ -148,11 +152,13 @@ export default function WorkspacePage() {
       </TabSwitcher>
 
       {/* Job Configuration — always visible below tabs */}
-      <JobConfigForm
-        selectedSceneIds={allSelectedIds}
-        onSubmit={handleSubmitJob}
-        isSubmitting={submitJobMutation.isPending}
-      />
+      <div className="border-t border-divider pt-8 mt-4">
+        <JobConfigForm
+          selectedSceneIds={allSelectedIds}
+          onSubmit={handleSubmitJob}
+          isSubmitting={submitJobMutation.isPending}
+        />
+      </div>
     </div>
   );
 }

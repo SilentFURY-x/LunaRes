@@ -16,6 +16,7 @@
 import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { RippleButton } from '@/components/ui/ripple-button';
 
 interface CatalogMapProps {
   /** Called when user finishes drawing an AOI. bbox = "minLon,minLat,maxLon,maxLat" */
@@ -178,16 +179,16 @@ export default function CatalogMap({ onAoiDrawn, sceneFootprints }: CatalogMapPr
     <div>
       {/* Toolbar */}
       <div className="flex gap-2 mb-2">
-        <button
+        <RippleButton
           onClick={() => setDrawMode(drawMode === "rectangle" ? null : "rectangle")}
           className={`px-3 py-1 text-xs border ${
             drawMode === "rectangle"
-              ? "border-signal text-signal"
-              : "border-crater text-regolith/60"
+              ? "border-divider text-primaryText"
+              : "border-divider text-secondaryText"
           }`}
         >
           {drawMode === "rectangle" ? "Drawing…" : "Draw Rectangle (AOI)"}
-        </button>
+        </RippleButton>
       </div>
 
       {/* Map container — MUST have explicit height */}

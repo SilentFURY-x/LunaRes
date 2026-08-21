@@ -16,20 +16,20 @@ interface AdapterModeToggleProps {
 export default function AdapterModeToggle({ currentMode }: AdapterModeToggleProps) {
   return (
     <div className="flex items-center gap-3 mb-4">
-      <span className="text-xs text-regolith/50">Adapter Mode:</span>
+      <span className="text-xs text-secondaryText">Adapter Mode:</span>
       <span
         className={`text-sm font-mono px-2 py-0.5 ${
           currentMode === "live"
-            ? "bg-green-900/30 text-green-400"
+            ? "bg-green-900/30 text-green-600 dark:text-green-400"
             : currentMode === "mock"
-              ? "bg-flare/20 text-flare"
-              : "bg-crater text-regolith/40"
+              ? "bg-flare/20 text-red-600 dark:text-red-400"
+              : "bg-glassBase text-secondaryText"
         }`}
       >
         {currentMode ?? "Unknown"}
       </span>
       {currentMode === "mock" && (
-        <span className="text-xs text-regolith/40">
+        <span className="text-xs text-secondaryText">
           (5 pre-loaded catalog entries for demo)
         </span>
       )}

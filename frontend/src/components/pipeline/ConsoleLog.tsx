@@ -22,30 +22,30 @@ const STATUS_INDICATORS: Record<LogEntry["status"], string> = {
 };
 
 const STATUS_COLORS: Record<LogEntry["status"], string> = {
-  pending: "text-regolith/40",
-  running: "text-signal",
-  done: "text-green-400",
-  error: "text-red-400",
+  pending: "text-secondaryText",
+  running: "text-primaryText",
+  done: "text-green-600 dark:text-green-400",
+  error: "text-red-600 dark:text-red-400",
 };
 
 export default function ConsoleLog({ entries }: ConsoleLogProps) {
   if (entries.length === 0) {
     return (
-      <div className="border border-crater p-3 text-xs text-regolith/40 font-mono">
+      <div className="border border-divider p-3 text-xs text-secondaryText font-mono">
         Console output will appear here…
       </div>
     );
   }
 
   return (
-    <div className="border border-crater p-3 font-mono text-xs max-h-64 overflow-y-auto">
+    <div className="border border-divider p-3 font-mono text-xs max-h-64 overflow-y-auto">
       {entries.map((entry, i) => (
         <div key={i} className="flex gap-2 mb-0.5">
           <span className={STATUS_COLORS[entry.status]}>
             {STATUS_INDICATORS[entry.status]}
           </span>
-          <span className="text-regolith/40">{entry.timestamp}</span>
-          <span className="text-regolith/80">{entry.message}</span>
+          <span className="text-secondaryText">{entry.timestamp}</span>
+          <span className="text-secondaryText">{entry.message}</span>
         </div>
       ))}
     </div>

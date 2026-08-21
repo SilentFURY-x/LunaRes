@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   # ── PostgreSQL + PostGIS ──────────────────────────────────────────
   postgres:
@@ -44,10 +42,11 @@ services:
     volumes:
       - miniodata:/data
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   # ── MinIO bucket initialization ───────────────────────────────────
@@ -65,8 +64,6 @@ services:
       "
 
   # ── Dynamic COG tile server ──────────────────────────────────────
-  # Serves LR/SR/confidence layers as XYZ tiles.
-  # See docs/Architecture.md section 3.7 for why this exists.
   titiler:
     image: ghcr.io/developmentseed/titiler:latest
     ports:
@@ -86,13 +83,19 @@ services:
     build:
       context: ../backend
       dockerfile: Dockerfile
-    env_file:
-      - ../.env
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-lunares}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-lunares}
       - REDIS_URL=redis://redis:6379/0
       - S3_ENDPOINT_URL=http://minio:9000
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY:-minioadmin}
+      - S3_SECRET_KEY=${S3_SECRET_KEY:-minioadmin}
+      - S3_BUCKET=${S3_BUCKET:-lunares-scenes}
+      - S3_REGION=${S3_REGION:-us-east-1}
       - TITILER_URL=http://titiler:8000
+      - BHOONIDHI_ADAPTER_MODE=${BHOONIDHI_ADAPTER_MODE:-mock}
+      - MODEL_VERSION=${MODEL_VERSION:-lunares-sr-v0.1.0}
+      - SR_MODEL_WEIGHTS_PATH=${SR_MODEL_WEIGHTS_PATH:-/app/weights/sr_fast_v1.pt}
+      - CORS_ORIGINS=["*"]
     ports:
       - "8000:8000"
     depends_on:
@@ -113,12 +116,17 @@ services:
       context: ../backend
       dockerfile: Dockerfile
     command: celery -A workers.celery_app worker --loglevel=info --concurrency=2
-    env_file:
-      - ../.env
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-lunares}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-lunares}
       - REDIS_URL=redis://redis:6379/0
       - S3_ENDPOINT_URL=http://minio:9000
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY:-minioadmin}
+      - S3_SECRET_KEY=${S3_SECRET_KEY:-minioadmin}
+      - S3_BUCKET=${S3_BUCKET:-lunares-scenes}
+      - S3_REGION=${S3_REGION:-us-east-1}
+      - BHOONIDHI_ADAPTER_MODE=${BHOONIDHI_ADAPTER_MODE:-mock}
+      - MODEL_VERSION=${MODEL_VERSION:-lunares-sr-v0.1.0}
+      - SR_MODEL_WEIGHTS_PATH=${SR_MODEL_WEIGHTS_PATH:-/app/weights/sr_fast_v1.pt}
     depends_on:
       postgres:
         condition: service_healthy
