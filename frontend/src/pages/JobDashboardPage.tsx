@@ -34,8 +34,10 @@ export default function JobDashboardPage() {
   }
 
   return (
-    <div className="px-6 py-6">
-      <h2 className="font-display text-xl mb-4">Job Dashboard</h2>
+    <div className="px-6 py-12 max-w-6xl mx-auto">
+      <h2 className="font-display font-extrabold text-2xl uppercase tracking-wider text-primaryText mb-8">
+        Job Dashboard
+      </h2>
 
       <AggregateStats stats={stats} isLoading={statsLoading} />
 

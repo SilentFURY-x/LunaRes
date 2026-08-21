@@ -29,21 +29,29 @@ export default function PipelinePage() {
   }
 
   return (
-    <div className="px-6 py-6">
-      <h2 className="font-display text-xl mb-2">ISRO Pipeline Integration</h2>
-      <p className="text-sm text-regolith/60 mb-4">
+    <div className="px-6 py-12 max-w-4xl mx-auto">
+      <h2 className="font-display font-extrabold text-2xl uppercase tracking-wider text-primaryText mb-6">
+        ISRO Pipeline Integration
+      </h2>
+      <p className="font-medium text-sm tracking-tight text-secondaryText mb-8 max-w-2xl leading-relaxed">
         This tab demonstrates the Bhoonidhi-compatible pipeline adapter.
         The same API contract works with both a live ISRO API connection
         and a mock adapter for demo purposes.
       </p>
 
-      <AdapterModeToggle
-        currentMode={searchResult?.adapter_mode ?? null}
-      />
+      <div className="space-y-8">
+        <AdapterModeToggle
+          currentMode={searchResult?.adapter_mode ?? null}
+        />
 
-      <ContractDisplay />
+        <div className="border-t border-divider pt-8">
+          <ContractDisplay />
+        </div>
 
-      <DemoRunner />
+        <div className="border-t border-divider pt-8">
+          <DemoRunner />
+        </div>
+      </div>
     </div>
   );
 }

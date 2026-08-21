@@ -46,7 +46,7 @@ export default function Toast() {
   if (toasts.length === 0) return null;
 
   const typeStyles: Record<ToastMessage["type"], string> = {
-    info: "border-signal",
+    info: "border-divider",
     success: "border-green-500",
     error: "border-flare",
   };
@@ -56,7 +56,7 @@ export default function Toast() {
       {toasts.map((t) => (
         <div
           key={t.id}
-          className={`bg-basalt border ${typeStyles[t.type]} px-4 py-2 text-sm text-regolith`}
+          className={`bg-background border ${typeStyles[t.type]} px-4 py-2 text-sm text-secondaryText`}
         >
           {t.text}
         </div>

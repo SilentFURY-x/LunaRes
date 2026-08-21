@@ -38,16 +38,16 @@ export default function ResultViewerPage() {
 
   if (isLoading) {
     return (
-      <div className="px-6 py-10">
-        <p className="text-sm text-regolith/50">Loading result…</p>
+      <div className="px-6 py-12">
+        <p className="font-mono font-medium text-xs uppercase tracking-widest text-secondaryText">Loading result…</p>
       </div>
     );
   }
 
   if (isError || !product) {
     return (
-      <div className="px-6 py-10">
-        <p className="text-sm text-flare">
+      <div className="px-6 py-12">
+        <p className="font-medium text-sm tracking-tight text-red-600 dark:text-red-400">
           Failed to load product. The job may still be processing.
         </p>
       </div>
@@ -62,15 +62,17 @@ export default function ResultViewerPage() {
     : undefined;
 
   return (
-    <div className="px-6 py-6">
-      <h2 className="font-display text-xl mb-4">Result</h2>
+    <div className="px-6 py-12 max-w-[1400px] mx-auto">
+      <h2 className="font-display font-extrabold text-2xl uppercase tracking-wider text-primaryText mb-8">
+        Result
+      </h2>
 
-      <div className="flex gap-6">
+      <div className="flex gap-8">
         {/* Main viewport */}
         <div className="flex-1 min-w-0">
           <TabSwitcher tabs={VIEW_TABS} defaultTab="compare">
             {(activeTab) => (
-              <div>
+              <div className="py-6">
                 {activeTab === "compare" && (
                   <CompareSlider
                     lrImageUrl={lrTileUrl}
@@ -91,7 +93,7 @@ export default function ResultViewerPage() {
           </TabSwitcher>
 
           {/* Confidence controls — floating below viewport */}
-          <div className="mt-3">
+          <div className="mt-6 border-t border-divider pt-6">
             <ConfidenceOverlay
               enabled={confidenceEnabled}
               onToggle={setConfidenceEnabled}
@@ -103,7 +105,7 @@ export default function ResultViewerPage() {
         </div>
 
         {/* Right sidebar */}
-        <div className="w-72 flex-shrink-0 flex flex-col gap-3">
+        <div className="w-80 flex-shrink-0 flex flex-col gap-6">
           <ProvenancePanel product={product} />
           <MetricsPanel metrics={product.metrics} />
           <ExportActions productId={product.product_id} />

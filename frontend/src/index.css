@@ -2,6 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --background: #F4F4F5;
+    --primaryText: #18181B;
+    --secondaryText: #52525B;
+    --divider: rgba(0, 0, 0, 0.15);
+    --ctaBtn: #FFFFFF;
+    --inputBorder: #E4E4E7;
+    --pillBtnBg: rgba(0, 0, 0, 0.05);
+    --glassBase: rgba(0, 0, 0, 0.03);
+    --glassActive: rgba(0, 0, 0, 0.08);
+    --glassHover: rgba(0, 0, 0, 0.12);
+  }
+
+  .dark {
+    --background: #000000;
+    --primaryText: #FFFFFF;
+    --secondaryText: #A1A1AA;
+    --divider: rgba(255, 255, 255, 0.15);
+    --ctaBtn: #18181B;
+    --inputBorder: #E4E4E7;
+    --pillBtnBg: rgba(255, 255, 255, 0.1);
+    --glassBase: rgba(255, 255, 255, 0.05);
+    --glassActive: rgba(255, 255, 255, 0.2);
+    --glassHover: rgba(255, 255, 255, 0.3);
+  }
+}
+
 body {
   font-family: theme('fontFamily.body');
+  background-color: var(--background);
+  color: var(--primaryText);
+}
+
+/* Magic UI AnimatedThemeToggler View Transitions */
+html[data-magicui-theme-vt="active"]::view-transition-old(root) {
+  animation: none;
+  z-index: 1;
+}
+
+html[data-magicui-theme-vt="active"]::view-transition-new(root) {
+  animation: none;
+  z-index: 2;
+  clip-path: var(--magicui-theme-vt-clip-from, circle(0%));
+}
+
+html[data-magicui-theme-vt="active"]::view-transition-group(root) {
+  animation-duration: var(--magicui-theme-toggle-vt-duration, 0.4s);
 }

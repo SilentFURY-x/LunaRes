@@ -14,6 +14,7 @@ import { submitJob } from "@/api/endpoints";
 import { InferenceMode } from "@/api/types";
 import ConsoleLog from "./ConsoleLog";
 import type { LogEntry } from "./ConsoleLog";
+import { RippleButton } from '@/components/ui/ripple-button';
 
 // Pre-configured demo search params (Bhoonidhi mock catalog)
 const DEMO_SEARCH_PARAMS = {
@@ -116,17 +117,17 @@ export default function DemoRunner() {
 
   return (
     <div className="mt-4">
-      <button
+      <RippleButton
         onClick={runDemo}
         disabled={running}
-        className={`px-4 py-2 text-sm font-display mb-3 ${
+        className={`px-4 py-2 text-sm font-display font-extrabold uppercase tracking-wider text-primaryText mb-3 ${
           running
-            ? "bg-crater text-regolith/40 cursor-not-allowed"
-            : "bg-signal text-void"
+            ? "bg-glassBase text-secondaryText cursor-not-allowed"
+            : "bg-glassActive text-black"
         }`}
       >
         {running ? "Running…" : "Run Example"}
-      </button>
+      </RippleButton>
 
       <ConsoleLog entries={entries} />
     </div>
