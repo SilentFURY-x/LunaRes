@@ -1,12 +1,10 @@
 """
 Product endpoints — retrieve enhanced outputs, download links, and metrics reports.
-A "product" is the result of running SR inference on a scene within a job:
-it includes the enhanced image, confidence map, quality metrics, and a report.
 """
 import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from api.dependencies import DbDep, StoreDep
 from api.schemas import (
@@ -24,26 +22,54 @@ router = APIRouter()
 
 
 # ──────────────────────────────────────────────────────────────────────
+# GET /products/by-job/{job_id}/scene/{scene_id}
+# Must be BEFORE /{product_id} to avoid route conflict
+# ──────────────────────────────────────────────────────────────────────
+@router.get("/by-job/{job_id}/scene/{scene_id}")
+def get_product_by_job_scene(job_id: str, scene_id: str, db: DbDep, store: StoreDep):
+    """
+    Find the product for a given job + scene combination.
+    This is how the frontend result viewer resolves a product from the URL params.
+    """
+    product = db.query(Product).filter(
+        Product.job_id == job_id,
+        Product.scene_id == scene_id,
+    ).first()
+
+    if not product:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No product found for job={job_id}, scene={scene_id}",
+        )
+
+    return _product_to_frontend_response(product, db, store)
+
+
+# ──────────────────────────────────────────────────────────────────────
 # GET /products/{product_id} — product metadata + metrics
 # ──────────────────────────────────────────────────────────────────────
-@router.get("/{product_id}", response_model=ProductResponse)
-def get_product(product_id: str, db: DbDep):
+@router.get("/{product_id}")
+def get_product(product_id: str, db: DbDep, store: StoreDep):
     """Fetch full product metadata including quality metrics."""
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail=f"Product {product_id} not found")
-    return _product_to_response(product)
+    return _product_to_frontend_response(product, db, store)
 
 
 # ──────────────────────────────────────────────────────────────────────
 # GET /products/{product_id}/download — presigned download URLs
 # ──────────────────────────────────────────────────────────────────────
-@router.get("/{product_id}/download", response_model=ProductDownloadLinks)
-def get_download_links(product_id: str, db: DbDep, store: StoreDep):
+@router.get("/{product_id}/download")
+def get_download_links(
+    product_id: str,
+    db: DbDep,
+    store: StoreDep,
+    format: str = Query("geotiff", description="Export format: geotiff, png, pdf"),
+):
     """
-    Generate time-limited presigned URLs for all product artifacts
-    (SR output, confidence map, report).  Signed URLs prevent public
-    bucket access — see Architecture.md section 6.
+    Generate time-limited presigned URL for downloading the product.
+    Frontend expects { url: string }.
     """
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
@@ -51,23 +77,21 @@ def get_download_links(product_id: str, db: DbDep, store: StoreDep):
 
     expiry = settings.presigned_url_expiry_seconds
 
-    sr_url = store.generate_presigned_url(product.sr_output_uri, expiry)
+    # Select the right artifact based on format
+    if format == "pdf" and product.report_uri:
+        key = product.report_uri
+    elif product.sr_output_uri:
+        key = product.sr_output_uri
+    else:
+        raise HTTPException(status_code=404, detail="No downloadable artifact found")
 
-    conf_url = None
-    if product.confidence_map_uri:
-        conf_url = store.generate_presigned_url(product.confidence_map_uri, expiry)
+    try:
+        url = store.generate_presigned_url(key, expiry)
+    except Exception as exc:
+        logger.error("Failed to generate presigned URL: %s", exc)
+        raise HTTPException(status_code=500, detail="Failed to generate download URL")
 
-    report_url = None
-    if product.report_uri:
-        report_url = store.generate_presigned_url(product.report_uri, expiry)
-
-    return ProductDownloadLinks(
-        product_id=product.id,
-        sr_output_url=sr_url,
-        confidence_map_url=conf_url,
-        report_url=report_url,
-        expires_in_seconds=expiry,
-    )
+    return {"url": url}
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -75,11 +99,7 @@ def get_download_links(product_id: str, db: DbDep, store: StoreDep):
 # ──────────────────────────────────────────────────────────────────────
 @router.get("/{product_id}/report", response_model=ReportResponse)
 def get_report(product_id: str, db: DbDep):
-    """
-    Structured metrics report for a product — suitable for JSON export or
-    driving a PDF report (PRD feature S6).  Includes model provenance,
-    quality metrics, and processing details.
-    """
+    """Structured metrics report for a product."""
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail=f"Product {product_id} not found")
@@ -87,7 +107,6 @@ def get_report(product_id: str, db: DbDep):
     scene = db.query(Scene).filter(Scene.id == product.scene_id).first()
     job = db.query(Job).filter(Job.id == product.job_id).first()
 
-    # Build input/output dimension strings
     input_dims = None
     output_dims = None
     if scene and scene.width_px and scene.height_px:
@@ -95,7 +114,6 @@ def get_report(product_id: str, db: DbDep):
         scale = settings.sr_scale_factor
         output_dims = f"{scene.width_px * scale}x{scene.height_px * scale}"
 
-    # Data provenance
     provenance_parts = []
     if scene:
         if scene.product_id:
@@ -121,7 +139,7 @@ def get_report(product_id: str, db: DbDep):
         processing_time_seconds=product.processing_time_seconds,
         input_dimensions=input_dims,
         output_dimensions=output_dims,
-        confidence_summary=None,  # populated by the worker if confidence map exists
+        confidence_summary=None,
         data_provenance=provenance,
         generated_at=datetime.now(timezone.utc),
     )
@@ -149,7 +167,7 @@ def list_products(
     products = query.order_by(Product.created_at.desc()).offset(offset).limit(limit).all()
 
     return {
-        "products": [_product_to_response(p) for p in products],
+        "products": [_product_to_internal_response(p) for p in products],
         "total": total,
     }
 
@@ -158,7 +176,45 @@ def list_products(
 # Helpers
 # ──────────────────────────────────────────────────────────────────────
 
-def _product_to_response(product: Product) -> ProductResponse:
+def _product_to_frontend_response(product: Product, db, store) -> dict:
+    """
+    Build the product response shape the frontend types.ts expects:
+    ProductResponse with product_id, source_sensor, acquisition_date, etc.
+    """
+    scene = db.query(Scene).filter(Scene.id == product.scene_id).first()
+
+    # Generate presigned URLs for SR output and confidence map
+    sr_url = None
+    conf_url = None
+    try:
+        if product.sr_output_uri:
+            sr_url = store.generate_presigned_url(product.sr_output_uri)
+        if product.confidence_map_uri:
+            conf_url = store.generate_presigned_url(product.confidence_map_uri)
+    except Exception:
+        pass
+
+    return {
+        "product_id": product.id,
+        "scene_id": product.scene_id,
+        "job_id": product.job_id,
+        "sr_output_uri": sr_url or product.sr_output_uri,
+        "confidence_map_uri": conf_url or product.confidence_map_uri,
+        "metrics": {
+            "psnr": product.psnr,
+            "ssim": product.ssim,
+            "lpips": product.lpips,
+            "no_reference_quality": product.no_reference_quality,
+        },
+        "model_version": product.model_version,
+        "source_sensor": scene.sensor_profile if scene else "unknown",
+        "acquisition_date": scene.acquisition_time.isoformat() if scene and scene.acquisition_time else None,
+        "product_source_id": scene.product_id if scene else None,
+        "downstream_delta": None,
+    }
+
+
+def _product_to_internal_response(product: Product) -> ProductResponse:
     return ProductResponse(
         id=product.id,
         scene_id=product.scene_id,

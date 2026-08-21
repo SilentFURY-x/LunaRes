@@ -39,9 +39,7 @@ def list_sr_models():
 def submit_job(payload: JobCreate, db: DbDep):
     """
     Enqueue a job (single scene or batch).  Returns immediately with a job_id;
-    poll GET /jobs/{job_id} or connect via WebSocket for live progress.
-
-    Validates that all scene_ids exist before creating the job.
+    poll GET /jobs/{id} or connect via WebSocket for live progress.
     """
     # Validate all scene IDs exist
     for sid in payload.scene_ids:
@@ -81,16 +79,45 @@ def submit_job(payload: JobCreate, db: DbDep):
             )
             task_ids.append(result.id)
 
-        # Store first task ID for cancellation support
         job.celery_task_id = task_ids[0] if task_ids else None
         db.commit()
     except Exception as exc:
-        # If Celery isn't available (no Redis), the job stays queued —
-        # don't crash the API. Log and continue.
         logger.warning("Failed to dispatch Celery task: %s", exc)
 
     logger.info("Job %s created with %d scene(s)", job.id, len(payload.scene_ids))
     return _job_to_response(job)
+
+
+# ──────────────────────────────────────────────────────────────────────
+# GET /jobs/stats — aggregate stats for the dashboard header
+# ──────────────────────────────────────────────────────────────────────
+@router.get("/stats")
+def get_aggregate_stats(db: DbDep):
+    """
+    Returns aggregate job stats for the frontend dashboard header.
+    Must be defined BEFORE /{job_id} to avoid route conflict.
+    """
+    from sqlalchemy import func
+
+    total_jobs = db.query(func.count(Job.id)).scalar() or 0
+    active_jobs = db.query(func.count(Job.id)).filter(
+        Job.status.in_(["queued", "tiling", "inferring", "blending"])
+    ).scalar() or 0
+    total_tiles = db.query(func.coalesce(func.sum(Job.tiles_complete), 0)).scalar() or 0
+
+    # Rough throughput estimate: tiles processed in last 5 minutes
+    from datetime import datetime, timezone, timedelta
+    five_min_ago = datetime.now(timezone.utc) - timedelta(minutes=5)
+    recent_tiles = db.query(
+        func.coalesce(func.sum(Job.tiles_complete), 0)
+    ).filter(Job.updated_at >= five_min_ago).scalar() or 0
+    throughput = round(recent_tiles / 5, 1) if recent_tiles > 0 else 0
+
+    return {
+        "active_workers": active_jobs,
+        "total_tiles_processed": int(total_tiles),
+        "throughput_tiles_per_minute": throughput,
+    }
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -106,25 +133,35 @@ def get_job_status(job_id: str, db: DbDep):
 
 
 # ──────────────────────────────────────────────────────────────────────
-# GET /jobs/ — list all jobs
+# GET /jobs/ — list all jobs (returns flat array for frontend)
 # ──────────────────────────────────────────────────────────────────────
-@router.get("/", response_model=JobListResponse)
+@router.get("/")
 def list_jobs(
     db: DbDep,
     status: Optional[str] = Query(None, description="Filter by status"),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ):
-    """List all jobs, optionally filtered by status, newest first."""
+    """List all jobs. Returns a flat array matching frontend JobListItem[]."""
     query = db.query(Job)
     if status:
         query = query.filter(Job.status == status)
-    total = query.count()
     jobs = query.order_by(Job.created_at.desc()).offset(offset).limit(limit).all()
-    return JobListResponse(
-        jobs=[_job_to_response(j) for j in jobs],
-        total=total,
-    )
+
+    # Frontend expects a flat array of JobListItem objects
+    return [
+        {
+            "job_id": j.id,
+            "status": j.status,
+            "inference_mode": j.inference_mode,
+            "tiles_total": j.tiles_total or 0,
+            "tiles_complete": j.tiles_complete or 0,
+            "scene_count": len(j.scene_ids) if j.scene_ids else 0,
+            "created_at": j.created_at.isoformat() if j.created_at else None,
+            "updated_at": j.updated_at.isoformat() if j.updated_at else None,
+        }
+        for j in jobs
+    ]
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -132,9 +169,7 @@ def list_jobs(
 # ──────────────────────────────────────────────────────────────────────
 @router.delete("/{job_id}", response_model=JobStatusResponse)
 def cancel_job(job_id: str, db: DbDep):
-    """
-    Cancel a queued or running job. Already-completed tiles are kept, not deleted.
-    """
+    """Cancel a queued or running job."""
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
@@ -145,7 +180,6 @@ def cancel_job(job_id: str, db: DbDep):
             detail=f"Job is already {job.status} — cannot cancel.",
         )
 
-    # Attempt to revoke the Celery task
     if job.celery_task_id:
         try:
             from workers.celery_app import celery_app

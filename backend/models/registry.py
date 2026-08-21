@@ -21,8 +21,8 @@ def get_model_specs() -> dict[str, ModelSpec]:
     return {
         "lunaformer_lunar": ModelSpec(
             id="lunaformer_lunar",
-            label="LunaFormer-Lunar",
-            description="Primary lunar super-resolution model.",
+            label="T-GAN",
+            description="Fastest custom model trained on 50 real ISRO images.",
             weights_path=Path(settings.sr_model_weights_path),
             primary=True,
             allow_fallback=True,
@@ -36,7 +36,7 @@ def get_model_specs() -> dict[str, ModelSpec]:
         "swinir": ModelSpec(
             id="swinir",
             label="SwinIR",
-            description="Transformer benchmark fine-tuned for lunar imagery.",
+            description="Most accurate state-of-the-art benchmark model.",
             weights_path=Path(settings.swinir_weights_path),
         ),
         "realesrgan": ModelSpec(

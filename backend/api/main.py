@@ -12,7 +12,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.config import settings
-from api.schemas import HealthResponse, DependencyStatus
 
 logger = logging.getLogger(__name__)
 
@@ -91,12 +90,13 @@ app.add_middleware(
 # Register routers
 # ======================================================================
 
-from api.routers import scenes, jobs, pipeline, products, ws
+from api.routers import scenes, jobs, pipeline, products, ws, feedback
 
 app.include_router(scenes.router, prefix="/scenes", tags=["scenes"])
 app.include_router(jobs.router, prefix="/jobs", tags=["jobs"])
 app.include_router(products.router, prefix="/products", tags=["products"])
 app.include_router(pipeline.router, prefix="/pipeline", tags=["isro-pipeline-adapter"])
+app.include_router(feedback.router, prefix="/feedback", tags=["feedback"])
 app.include_router(ws.router, tags=["websocket"])
 
 
@@ -104,96 +104,57 @@ app.include_router(ws.router, tags=["websocket"])
 # Health check — reports dependency status for all infra components
 # ======================================================================
 
-@app.get("/health", response_model=HealthResponse, tags=["meta"])
+@app.get("/health", tags=["meta"])
 def health():
     """
-    Health check with dependency status.  Judges can verify all services
-    are connected at a glance during the live demo.
+    Health check — returns shape matching frontend HealthResponse type.
     """
-    deps: list[DependencyStatus] = []
-    all_healthy = True
+    pg_ok, pg_lat = _check_postgres()
+    redis_ok, redis_lat = _check_redis()
+    minio_ok, minio_lat = _check_s3()
 
-    # Check Postgres
-    pg_status = _check_postgres()
-    deps.append(pg_status)
-    if not pg_status.healthy:
-        all_healthy = False
+    all_ok = pg_ok and redis_ok and minio_ok
+    avg_latency = round(sum(filter(None, [pg_lat, redis_lat, minio_lat])) / 3, 1)
 
-    # Check Redis
-    redis_status = _check_redis()
-    deps.append(redis_status)
-    if not redis_status.healthy:
-        all_healthy = False
-
-    # Check MinIO/S3
-    s3_status = _check_s3()
-    deps.append(s3_status)
-    if not s3_status.healthy:
-        all_healthy = False
-
-    overall = "healthy" if all_healthy else "degraded"
-    return HealthResponse(
-        status=overall,
-        version=settings.model_version,
-        dependencies=deps,
-    )
+    return {
+        "status": "ok" if all_ok else "degraded",
+        "services": {
+            "postgres": pg_ok,
+            "redis": redis_ok,
+            "minio": minio_ok,
+        },
+        "latency_ms": avg_latency,
+    }
 
 
-def _check_postgres() -> DependencyStatus:
+def _check_postgres() -> tuple[bool, float]:
     try:
         start = time.time()
         from sqlalchemy import text
         from db.database import engine
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        latency = (time.time() - start) * 1000
-        return DependencyStatus(
-            name="PostgreSQL + PostGIS",
-            healthy=True,
-            latency_ms=round(latency, 1),
-        )
-    except Exception as exc:
-        return DependencyStatus(
-            name="PostgreSQL + PostGIS",
-            healthy=False,
-            detail=str(exc),
-        )
+        return True, round((time.time() - start) * 1000, 1)
+    except Exception:
+        return False, 0.0
 
 
-def _check_redis() -> DependencyStatus:
+def _check_redis() -> tuple[bool, float]:
     try:
         import redis as redis_lib
         start = time.time()
         r = redis_lib.from_url(settings.redis_url)
         r.ping()
-        latency = (time.time() - start) * 1000
-        return DependencyStatus(
-            name="Redis (job queue)",
-            healthy=True,
-            latency_ms=round(latency, 1),
-        )
-    except Exception as exc:
-        return DependencyStatus(
-            name="Redis (job queue)",
-            healthy=False,
-            detail=str(exc),
-        )
+        return True, round((time.time() - start) * 1000, 1)
+    except Exception:
+        return False, 0.0
 
 
-def _check_s3() -> DependencyStatus:
+def _check_s3() -> tuple[bool, float]:
     try:
         start = time.time()
         from services.storage import storage
         storage._client.head_bucket(Bucket=settings.s3_bucket)
-        latency = (time.time() - start) * 1000
-        return DependencyStatus(
-            name=f"MinIO/S3 (bucket: {settings.s3_bucket})",
-            healthy=True,
-            latency_ms=round(latency, 1),
-        )
-    except Exception as exc:
-        return DependencyStatus(
-            name=f"MinIO/S3 (bucket: {settings.s3_bucket})",
-            healthy=False,
-            detail=str(exc),
-        )
+        return True, round((time.time() - start) * 1000, 1)
+    except Exception:
+        return False, 0.0

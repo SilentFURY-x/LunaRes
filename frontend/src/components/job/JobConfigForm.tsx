@@ -75,23 +75,27 @@ export default function JobConfigForm({
         {/* Super-resolution engine */}
         <div>
           <label className="block font-mono font-medium text-xs uppercase tracking-widest text-secondaryText mb-2">
-            Inference Mode
+            Enhancement Model
           </label>
           <select
-            value={mode}
-            onChange={(e) => setMode(e.target.value as InferenceMode)}
+            value={model}
+            onChange={(e) => setModel(e.target.value as SRModelName)}
             className="bg-background border border-divider text-secondaryText font-medium text-sm tracking-tight px-3 py-2 focus:outline-none focus:border-zinc-400 transition-colors"
           >
-            <option value={SRModelName.LunaFormerLunar}>LunaFormer-Lunar (Primary)</option>
+            <option value={SRModelName.LunaFormerLunar}>T-GAN (Fastest - Custom)</option>
             <option value={SRModelName.HAT}>HAT (Benchmark)</option>
-            <option value={SRModelName.SwinIR}>SwinIR (Benchmark)</option>
+            <option value={SRModelName.SwinIR}>SwinIR (Most Accurate)</option>
             <option value={SRModelName.RealESRGAN}>Real-ESRGAN (Perceptual)</option>
             <option value={SRModelName.Bicubic}>Bicubic (Baseline)</option>
           </select>
           <p className="font-mono font-medium text-xs uppercase tracking-widest text-zinc-500 mt-2">
-            {mode === InferenceMode.Fast
-              ? "Lower latency, deterministic output"
-              : "Sharper perceptual detail, higher compute cost"}
+            {model === SRModelName.LunaFormerLunar
+              ? "Our custom lightning-fast model trained on 50 real lunar pairs"
+              : model === SRModelName.SwinIR
+                ? "Most accurate state-of-the-art benchmark model"
+                : model === SRModelName.RealESRGAN
+                  ? "Sharper-looking output; validate before scientific use"
+                  : "Comparison engine for benchmarking"}
           </p>
         </div>
       </div>
