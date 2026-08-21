@@ -11,6 +11,7 @@ Full design docs live in [`docs/`](./docs):
 - [`docs/TechStack.md`](./docs/TechStack.md) — technology choices
 - [`docs/DataSources.md`](./docs/DataSources.md) — where the training data comes from, and in what format
 - [`docs/WorkingPlan.md`](./docs/WorkingPlan.md) — build order, team roles, differentiation strategy
+- [`docs/ExternalModels.md`](./docs/ExternalModels.md) — HAT, SwinIR, and Real-ESRGAN setup and attribution
 
 ## Repository layout
 
@@ -47,6 +48,7 @@ lunares/
 cp .env.example .env
 
 # 2. Bring up the full stack
+# Place optional checkpoints in ./models first (see models/README.md)
 cd infra
 docker compose up --build
 

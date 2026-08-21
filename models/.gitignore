@@ -1,0 +1,4 @@
+*.ckpt
+*.safetensors
+!README.md
+!model_manifest.json

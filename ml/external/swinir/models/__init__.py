@@ -1,0 +1,1 @@
+"""Vendored SwinIR model definitions."""

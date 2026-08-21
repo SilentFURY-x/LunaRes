@@ -24,6 +24,14 @@ class InferenceMode(str, Enum):
     high_fidelity = "high_fidelity"  # diffusion-based refinement (stretch)
 
 
+class SRModelName(str, Enum):
+    lunaformer_lunar = "lunaformer_lunar"
+    hat = "hat"
+    swinir = "swinir"
+    realesrgan = "realesrgan"
+    bicubic = "bicubic"
+
+
 class JobStatus(str, Enum):
     queued = "queued"
     tiling = "tiling"
@@ -91,7 +99,11 @@ class SceneListResponse(BaseModel):
 class JobCreate(BaseModel):
     """Submit a new processing job (single scene or batch)."""
     scene_ids: list[str] = Field(..., min_length=1)
-    inference_mode: InferenceMode = InferenceMode.fast
+    sr_model: SRModelName = SRModelName.lunaformer_lunar
+    inference_mode: Optional[InferenceMode] = Field(
+        None,
+        description="Deprecated compatibility field; use sr_model.",
+    )
     generate_confidence_map: bool = True
     run_downstream_comparison: bool = False
 
@@ -101,6 +113,7 @@ class JobStatusResponse(BaseModel):
     job_id: str
     status: JobStatus
     inference_mode: str
+    sr_model: str
     tiles_total: int
     tiles_complete: int
     progress_pct: float = 0.0
@@ -116,6 +129,15 @@ class JobListResponse(BaseModel):
     """Paginated list of jobs."""
     jobs: list[JobStatusResponse]
     total: int
+
+
+class SRModelInfo(BaseModel):
+    id: str
+    label: str
+    description: str
+    primary: bool
+    perceptual: bool
+    weights_available: bool
 
 
 # ======================================================================

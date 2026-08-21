@@ -9,7 +9,7 @@
  */
 
 import { useState } from "react";
-import { InferenceMode, SensorProfile } from "@/api/types";
+import { SensorProfile, SRModelName } from "@/api/types";
 import type { JobCreate } from "@/api/types";
 
 interface JobConfigFormProps {
@@ -32,7 +32,7 @@ export default function JobConfigForm({
   const [sensorProfile, setSensorProfile] = useState<SensorProfile>(
     suggestedProfile ?? SensorProfile.Lunar,
   );
-  const [mode, setMode] = useState<InferenceMode>(InferenceMode.Fast);
+  const [model, setModel] = useState<SRModelName>(SRModelName.LunaFormerLunar);
   const [confidenceMap, setConfidenceMap] = useState(true);
   const [downstreamTask, setDownstreamTask] = useState(false);
 
@@ -42,9 +42,9 @@ export default function JobConfigForm({
 
     onSubmit({
       scene_ids: selectedSceneIds,
-      inference_mode: mode,
+      sr_model: model,
       generate_confidence_map: confidenceMap,
-      run_downstream_task_comparison: downstreamTask,
+      run_downstream_comparison: downstreamTask,
     });
   }
 
@@ -71,27 +71,28 @@ export default function JobConfigForm({
           </select>
         </div>
 
-        {/* Inference Mode */}
+        {/* Super-resolution engine */}
         <div>
           <label className="block text-xs text-regolith/50 mb-1">
-            Inference Mode
+            Enhancement Model
           </label>
           <select
-            value={mode}
-            onChange={(e) => setMode(e.target.value as InferenceMode)}
+            value={model}
+            onChange={(e) => setModel(e.target.value as SRModelName)}
             className="bg-basalt border border-crater text-regolith text-sm px-2 py-1"
           >
-            <option value={InferenceMode.Fast}>
-              Fast (Regression/GAN)
-            </option>
-            <option value={InferenceMode.HighFidelity}>
-              High-Fidelity (Diffusion)
-            </option>
+            <option value={SRModelName.LunaFormerLunar}>LunaFormer-Lunar (Primary)</option>
+            <option value={SRModelName.HAT}>HAT (Benchmark)</option>
+            <option value={SRModelName.SwinIR}>SwinIR (Benchmark)</option>
+            <option value={SRModelName.RealESRGAN}>Real-ESRGAN (Perceptual)</option>
+            <option value={SRModelName.Bicubic}>Bicubic (Baseline)</option>
           </select>
           <p className="text-xs text-regolith/40 mt-1">
-            {mode === InferenceMode.Fast
-              ? "Lower latency, deterministic output"
-              : "Sharper perceptual detail, higher compute cost"}
+            {model === SRModelName.LunaFormerLunar
+              ? "Default model optimized for the LunaRes lunar workflow"
+              : model === SRModelName.RealESRGAN
+                ? "Sharper-looking output; validate before scientific use"
+                : "Comparison engine for benchmarking LunaFormer-Lunar"}
           </p>
         </div>
       </div>

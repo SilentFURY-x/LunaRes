@@ -32,7 +32,7 @@ def process_scene(
     self,
     scene_id: str,
     job_id: str,
-    inference_mode: str,
+    model_name: str,
     generate_confidence_map: bool,
 ):
     """
@@ -54,7 +54,7 @@ def process_scene(
 
     try:
         _run_pipeline(
-            self, scene_id, job_id, inference_mode,
+            self, scene_id, job_id, model_name,
             generate_confidence_map, start_time,
         )
     except Exception as exc:
@@ -68,7 +68,7 @@ def _run_pipeline(
     task,
     scene_id: str,
     job_id: str,
-    inference_mode: str,
+    model_name: str,
     generate_confidence_map: bool,
     start_time: float,
 ):
@@ -113,7 +113,7 @@ def _run_pipeline(
         # ── 4. Run inference ──────────────────────────────────────────
         _update_job_status(job_id, "inferring", db=db)
 
-        sr_model = get_sr_model(mode=inference_mode)
+        sr_model = get_sr_model(model_name=model_name)
         scale = settings.sr_scale_factor
 
         sr_tiles: list[np.ndarray] = []
@@ -202,7 +202,7 @@ def _run_pipeline(
             "scene_id": scene_id,
             "job_id": job_id,
             "model_version": sr_model.version,
-            "inference_mode": inference_mode,
+            "sr_model": model_name,
             "using_fallback_model": sr_model.using_fallback,
             "scale_factor": scale,
             "input_shape": list(image.shape),
