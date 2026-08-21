@@ -75,7 +75,13 @@
 
 ### 3.2 API Gateway (FastAPI, Python)
 - Stateless; all state lives in Postgres/Redis/object storage so it can scale horizontally behind a load balancer.
-- Endpoints: `POST /jobs` (submit scene(s)), `GET /jobs/{id}`, `GET /scenes/{id}/tiles/{z}/{x}/{y}`, `POST /pipeline/fetch` (ISRO adapter), `GET /scenes/{id}/report`.
+- **Scenes endpoints:** `POST /scenes/upload` (multipart file upload with SHA-256 content-hash deduplication and rasterio metadata extraction), `POST /scenes/` (register from storage URI), `GET /scenes/{id}` (metadata + presigned download URL), `GET /scenes/` (spatial search via PostGIS `ST_Intersects` on bbox, with sensor/date filters and pagination).
+- **Jobs endpoints:** `POST /jobs/` (submit with scene validation + Celery dispatch), `GET /jobs/{id}` (status + tile progress), `GET /jobs/` (list with status filter + pagination), `DELETE /jobs/{id}` (cancel with Celery revoke), `GET /jobs/{id}/products` (list job outputs).
+- **Products endpoints:** `GET /products/{id}` (metadata + metrics), `GET /products/{id}/download` (time-limited presigned URLs for SR output, confidence map, and report), `GET /products/{id}/report` (structured metrics report with provenance).
+- **Pipeline endpoints:** `GET /pipeline/search`, `POST /pipeline/fetch/{id}`, `POST /pipeline/push/{id}`, `GET /pipeline/status` — mirrors Bhoonidhi's contract.
+- **WebSocket:** `WS /ws/jobs/{job_id}` — streams real-time tile completion progress every second until the job reaches a terminal state.
+- **Health:** `GET /health` — reports dependency status (Postgres, Redis, MinIO) with latency measurements.
+- **Services layer:** all S3/MinIO interactions go through a centralized `StorageService` class (upload, download, presigned URLs, SHA-256 hashing, key generation) — makes the MinIO→S3 swap zero-code-change.
 - AuthN/Z via API keys (for pipeline/service callers) and session auth (for the web UI).
 
 ### 3.3 Job Queue & Workers (Redis + Celery, or RQ for simplicity)
@@ -90,8 +96,9 @@
 - Sensor-domain profiles: separate fine-tuned weights (or conditioning input) per sensor family (lunar panchromatic / Earth optical / SAR), selected automatically from input metadata or manually by the user.
 
 ### 3.5 Metadata DB (PostgreSQL + PostGIS)
-- Tables: `scenes` (source, sensor, CRS, GSD, footprint geometry, acquisition time), `jobs` (status, worker, timings), `products` (SR output, confidence map, report — each linked to a scene+job), `feedback` (human-in-the-loop corrections, stretch feature).
+- Tables: `scenes` (source URI, original filename, content hash for dedup, sensor profile, file format, CRS, GSD, width/height/bands/dtype, footprint geometry, acquisition time, product ID), `jobs` (status, inference mode, confidence/downstream flags, tile counts, error message, Celery task ID for cancellation), `products` (SR output URI, confidence map URI, report URI, all quality metrics, processing time — each linked to scene+job via foreign keys with bidirectional relationships), `feedback` (human-in-the-loop corrections, stretch feature).
 - PostGIS enables spatial queries (e.g., "give me all enhanced scenes overlapping this AOI") — directly useful for the map-based UI and for the pipeline adapter's "search" semantics.
+- DB init runs automatically on API startup (PostGIS extension + `CREATE TABLE IF NOT EXISTS`) — no manual migration needed during the hackathon.
 
 ### 3.6 Object Storage (S3-compatible — AWS S3 or self-hosted MinIO for the hackathon)
 - Stores: raw ingested rasters, normalized COGs, SR outputs, confidence maps, generated PDF reports.

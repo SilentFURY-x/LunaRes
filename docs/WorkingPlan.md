@@ -36,11 +36,16 @@ If you're a smaller team, collapse Data Engineer into ML Lead, and Frontend/Back
 - Swap in real TMC-2/OHRC tiles as soon as Phase 1 delivers them; retrain
 - Add the uncertainty/confidence head — treat this as MVP scope, not stretch, given how central it is to your differentiation story
 
-### Phase 3 — Backend
-- FastAPI skeleton: job submission, status, scene/product endpoints
-- Celery worker: tiling → inference → feather-blend mosaic → storage write
-- Postgres/PostGIS schema + migrations
-- Bhoonidhi-contract adapter — mock implementation first (unblocks frontend + demo regardless of API approval), live implementation if/when access comes through
+### Phase 3 — Backend ✅ IMPLEMENTED
+- FastAPI skeleton: scenes (upload + register + spatial search + metadata extraction), jobs (submit + status + list + cancel), products (download + metrics + reports), pipeline (search + fetch + push + status) — all endpoints fully wired with Pydantic schemas, PostGIS queries, and presigned URLs
+- WebSocket endpoint (WS /ws/jobs/{job_id}) for real-time tile-by-tile progress streaming
+- Centralized `StorageService` for all MinIO/S3 interactions (upload, download, presigned URLs, SHA-256 content-hash dedup)
+- FastAPI dependency injection (`dependencies.py`): DB session, storage, adapter — clean and testable
+- Celery worker: full pipeline — tile (with cosine-ramp feather blending) → inference (SR model with bicubic fallback until trained weights exist) → uncertainty estimation (gradient-based heuristic) → blend mosaic → store GeoTIFF → compute quality metrics (PSNR/SSIM/NIQE) → generate JSON report → create Product record — with per-tile progress updates and retry with exponential backoff
+- Postgres/PostGIS schema: Scene (with content hash, raster metadata, footprint geometry), Job (with tile counts, error messages, Celery task ID for cancellation), Product (with SR output, confidence map, report URIs, all quality metrics, processing time), Feedback — all with bidirectional relationships. Auto-initialized on startup.
+- Bhoonidhi-contract adapter — enriched mock with 5 realistic catalog entries (TMC-2, OHRC, LISS-4, AWiFS), `fetch()` creates real Scene records + stores synthetic images, `push()` generates ISRO metadata sidecar. Live adapter stub for when API access arrives.
+- Health endpoint: checks Postgres, Redis, MinIO with latency measurements
+- Docker Compose: healthchecks on all services, `createbuckets` init container, proper service-healthy dependencies, explicit internal networking
 
 ### Phase 4 — Frontend
 - Upload flow first (simplest, unblocks early testing against the real backend)

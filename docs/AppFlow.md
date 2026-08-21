@@ -29,10 +29,10 @@
 
 4. Job dashboard
    - List of jobs with status: Queued → Tiling → Inferring → Blending →
-     Complete / Failed
-   - Live progress (tiles completed / total) for batch jobs — this
-     screen is where "Scalable" becomes visible to a judge, not just
-     claimed
+     Complete / Failed / Cancelled
+   - Live progress via WebSocket (WS /ws/jobs/{job_id}) — streams
+     tile completion count in real-time, no polling needed
+   - Tiles completed / total shown as a progress bar with percentage
    - Click a completed job → Result viewer
 
 5. Result viewer (the centerpiece screen)
