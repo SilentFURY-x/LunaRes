@@ -13,6 +13,11 @@ Full design docs live in [`docs/`](./docs):
 - [`docs/WorkingPlan.md`](./docs/WorkingPlan.md) — build order, team roles, differentiation strategy
 - [`docs/ExternalModels.md`](./docs/ExternalModels.md) — HAT, SwinIR, and Real-ESRGAN setup and attribution
 
+Guides & Presentation Prep:
+- [`dev guides/demo_guide.md`](./dev%20guides/demo_guide.md) — Pitch script & live demonstration guide
+- [`dev guides/study_guide.md`](./dev%20guides/study_guide.md) — Comprehensive technical defense & panelist Q&A study guide
+- [`dev guides/connection_walkthrough.md`](./dev%20guides/connection_walkthrough.md) — Frontend architecture & backend connection guide
+
 ## Repository layout
 
 ```
